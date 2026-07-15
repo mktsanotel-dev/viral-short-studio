@@ -1,0 +1,10 @@
+{
+  "name": "viral-short-studio",
+  "version": "1.0.0",
+  "description": "Phần mềm local đánh giá, tự biên tập, bóc ý tưởng video short để viral (ffmpeg + whisper + AI cloud).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

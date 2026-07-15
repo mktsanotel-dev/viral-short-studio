@@ -1,0 +1,23 @@
+# Cấu hình riêng — KHÔNG chia sẻ
+.env
+settings.local.json
+
+# Dữ liệu chạy (video, cache, transcript) — tự sinh ra
+work/
+*.words.json
+
+# Môi trường Python trên Mac
+.venv/
+
+# Gói cài
+node_modules/
+
+# Tài nguyên & logo riêng của từng người
+assets/logo.png
+assets/logo-mentor.png
+Tài nguyên/*
+!Tài nguyên/README.txt
+
+# Rác hệ điều hành
+Thumbs.db
+.DS_Store

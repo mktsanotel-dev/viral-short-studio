@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎬 Viral Short Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎬%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img src="/logo-mentor.png" class="brand-logo" alt="logo" onerror="this.style.display='none'">
+    <span class="brand-txt"><span>🎬 <b>Viral Short Studio</b></span><span class="sub" id="brand-sub">cắt · biên tập · thumbnail · đăng Lark</span></span>
+  </div>
+  <div id="env" class="env">đang kiểm tra máy…</div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="autoclip">🧠 Cắt tự động</button>
+  <button class="tab" data-tab="long">🎬 Video dài YouTube</button>
+  <button class="tab" data-tab="voice">🎙️ Short lồng voice</button>
+  <button class="tab" data-tab="interior">🛋️ Nội thất cho con</button>
+  <button class="tab" data-tab="eval">⭐ Đánh giá</button>
+  <button class="tab" data-tab="edit">✂️ Tự biên tập</button>
+  <button class="tab" data-tab="extract">🔎 Bóc ý tưởng</button>
+  <button class="tab" data-tab="batch">📦 Hàng loạt</button>
+  <button class="tab" data-tab="config">⚙️ Cấu hình</button>
+</nav>
+
+<main>
+  <!-- 🧭 BẮT ĐẦU NHANH — hỏi "anh có gì?" rồi nhảy đúng tab (giảm 7 tab khó chọn) -->
+  <section id="wizard" class="wizard">
+    <div class="wiz-head">🧭 <b>Bắt đầu nhanh</b> — anh đang có gì? <button id="wiz-hide" class="wiz-x" title="Ẩn">×</button></div>
+    <div class="wiz-opts">
+      <button class="wiz-b" data-go="autoclip"><b>📹 1 video DÀI</b><span>quay ở chương trình → cắt tự động thành nhiều short</span></button>
+      <button class="wiz-b" data-go="long"><b>🎬 Nhiều video cần ghép</b><span>hoặc 1 video dài → bản 16:9 cho YouTube</span></button>
+      <button class="wiz-b" data-go="voice"><b>🎙️ Cảnh rời + file giọng đọc</b><span>lồng voice-over → 1 short kể chuyện</span></button>
+      <button class="wiz-b" data-go="edit"><b>✂️ 1 clip thô cần làm đẹp</b><span>cắt gọn, phụ đề, màu → bản viral</span></button>
+      <button class="wiz-b" data-go="eval"><b>⭐ Đã có short, muốn chấm điểm</b><span>đánh giá 6 trục + gợi ý sửa</span></button>
+      <button class="wiz-b" data-go="extract"><b>🔎 Link video viral của người khác</b><span>bóc hook + công thức để làm lại</span></button>
+    </div>
+  </section>
+
+  <!-- 🧠 CẮT TỰ ĐỘNG -->
+  <section id="tab-autoclip" class="panel active">
+    <div class="hero-note">
+      <b>Video dài → nhiều short viral.</b> AI phân tích toàn bài, chọn các đoạn hiệu quả có khả năng viral rồi tự cắt.
+      Điền các <b>link/đường dẫn</b> bên dưới, chọn hiệu ứng, bấm chạy. Xong: chỉnh màu &amp; logo <b>xem trực tiếp</b> rồi tải.
+    </div>
+
+    <!-- 4 LINK ĐẦU VÀO -->
+    <div class="opts">
+      <div class="optgroup">
+        <div class="optgroup-h">① 📹 Link video nguồn (bắt buộc)</div>
+        <div class="dropzone" id="dz-ac">
+          <p style="font-size:14px">Kéo–thả video, hoặc dán đường dẫn/link</p>
+          <small><label class="link">chọn file<input type="file" accept="video/*" hidden id="file-ac"></label></small>
+          <input class="pathbox" id="path-ac" placeholder="H:\\...\\video-chuong-trinh.mp4" />
+          <input class="pathbox" id="url-ac" placeholder="hoặc link YouTube/FB/TikTok" />
+        </div>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">② 🎬 Link thư mục TRÁM b-roll</div>
+        <label>Thư mục ảnh/clip trám (đặt tên theo từ khóa: bien.mp4, ca-phe.jpg…):
+          <input class="pathbox sm wide" id="ac-broll" placeholder="H:\\...\\thu-muc-broll (để trống nếu không dùng)" />
+        </label>
+        <label>Cách trám:
+          <select id="ac-brollfill">
+            <option value="match">Chỉ cảnh khớp từ khóa</option>
+            <option value="all">Trám dày</option>
+          </select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">③ 🎯 Link video CTA (nối cuối)</div>
+        <label><label class="link">chọn video CTA<input type="file" accept="video/*" hidden id="file-accta"></label>
+          <input class="pathbox sm wide" id="ac-cta" placeholder="H:\\...\\cta.mp4 (áp cho mọi short; có thể đổi riêng từng short sau)" />
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">④ 🏷️ Link Logo</div>
+        <label><label class="link">chọn logo<input type="file" accept="image/*" hidden id="file-aclogo"></label>
+          <input class="pathbox sm wide" id="ac-logo" placeholder="H:\\...\\logo.png (nền trong suốt; đặt vị trí sau khi render)" />
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">⑤ 🎵 Link Nhạc nền (bám vào short khi biên tập)</div>
+        <label><label class="link">chọn nhạc<input type="file" accept="audio/*" hidden id="file-acmusic"></label>
+          <input class="pathbox sm wide" id="ac-music" placeholder="H:\\...\\nhac.mp3 (nhạc ngắn hơn video sẽ TỰ LẶP)" />
+        </label>
+        <label>🔊 Âm lượng nhạc <b id="ac-mvval">18</b>%
+          <input type="range" id="ac-mv" min="0" max="100" value="18" style="width:100%">
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">⑥ 🖼️ Thumbnail thương hiệu (nền đỏ, chữ trắng)</div>
+        <label><input type="checkbox" id="ac-thumbbrand" checked> Dùng mẫu thương hiệu (thay ảnh trích khung)</label>
+        <label>Thư mục ảnh chân dung:
+          <input class="pathbox sm wide" id="ac-thumbdir" placeholder="tự điền từ cấu hình khi mở app" />
+          <span class="thumbdir-warn muted" style="display:none;color:var(--warn);font-size:11px">⚠ Thư mục ảnh không truy cập được (ổ mạng chưa gắn?) → thumbnail thương hiệu sẽ bỏ qua, dùng ảnh trích khung.</span>
+        </label>
+        <label>Tên hiển thị trên bìa:
+          <input class="pathbox sm wide" id="ac-thumbname" />
+        </label>
+      </div>
+    </div>
+
+    <!-- AI + HIỆU ỨNG -->
+    <div class="opts">
+      <div class="optgroup">
+        <div class="optgroup-h">🧠 AI chọn đoạn viral</div>
+        <label>Chất lượng nghe:
+          <select id="ac-model">
+            <option value="medium" selected>Whisper medium (chuẩn)</option>
+            <option value="small">Whisper small (nhanh)</option>
+          </select>
+        </label>
+        <label>Điểm tối thiểu: <b id="ac-scoreval">68</b>
+          <input type="range" id="ac-score" min="55" max="85" value="68" style="width:100%">
+        </label>
+        <label>Số short tối đa: <input class="pathbox sm" id="ac-max" value="30" style="width:80px" /></label>
+        <label><input type="checkbox" id="ac-thumb" checked> 🖼️ Tạo ảnh bìa (thumbnail)</label>
+        <label><input type="checkbox" id="ac-scoreclip" checked> 📊 Chấm thêm Điểm kỹ thuật (6 trục) mỗi short</label>
+        <label><input type="checkbox" id="ac-autolark"> 📤 Tự đăng Lark sau khi cắt <span class="muted" style="font-size:11px">(mặc định TẮT — sẽ hỏi xác nhận)</span></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎞️ Chuyển cảnh (như CapCut) &amp; khung</div>
+        <label>Hiệu ứng chuyển cảnh (nối CTA / ghép cảnh):
+          <select id="ac-trans">
+            <option value="fade">Mờ dần (fade)</option>
+            <option value="fadeblack">Mờ qua đen</option>
+            <option value="slideleft">Trượt ngang</option>
+            <option value="slideup">Trượt lên</option>
+            <option value="wipeleft">Gạt màn (wipe)</option>
+            <option value="circleopen">Mở vòng tròn</option>
+            <option value="dissolve">Hoà tan (dissolve)</option>
+            <option value="zoomin">Phóng to (zoom)</option>
+            <option value="cut">Cắt thẳng (không hiệu ứng)</option>
+          </select>
+        </label>
+        <label>Khung hình:
+          <select id="ac-reframe">
+            <option value="blur">9:16 nền mờ</option>
+            <option value="fill">9:16 cắt đầy</option>
+          </select>
+        </label>
+        <label>Làm mịn video:
+          <select id="ac-smooth">
+            <option value="off">Tắt</option><option value="low">Nhẹ</option>
+            <option value="medium" selected>Vừa</option><option value="high">Mạnh</option>
+          </select>
+        </label>
+        <label>🎙️ Giữ giọng, khử tạp âm:
+          <select id="ac-voice">
+            <option value="off">Tắt</option><option value="low">Nhẹ</option>
+            <option value="medium">Vừa</option><option value="high">Mạnh</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="ac-hook"> Đắp chữ tiêu đề đầu video (tuỳ chọn)</label>
+        <label><input type="checkbox" id="ac-film" checked> Vignette nhẹ</label>
+        <label><input type="checkbox" id="ac-prog" checked> Thanh tiến trình</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="dl" id="btn-ac-review">👁️ Xem lại thiết lập</button>
+      <button class="dl" id="ac-save">💾 Lưu project</button>
+      <button class="dl" id="ac-open">📂 Mở lại project</button>
+      <button class="dl" id="ac-rerun">🔁 Dựng lại (giữ phân tích · 0 token)</button>
+      <button class="go big" id="btn-ac">🚀 AI cắt video thành loạt short →</button>
+    </div>
+    <div id="ac-review"></div>
+    <div id="ac-out"></div>
+  </section>
+
+  <!-- 🎬 VIDEO DÀI YOUTUBE (16:9) -->
+  <section id="tab-long" class="panel">
+    <div class="hero-note">
+      <b>Nhiều video → 1 video, hoặc 1 video dài → biên tập.</b> Bản ngang <b>16:9</b> cho YouTube,
+      <b>không giới hạn thời lượng</b> (tùy dữ liệu đưa vào). Dùng lại các tính năng như short: cắt lặng/đệm,
+      phụ đề động, chỉnh màu, làm mịn, khử tạp âm, nhạc nền (tự lặp), logo thương hiệu.
+    </div>
+    <div class="dropzone" id="dz-long">
+      <p>Kéo–thả NHIỀU video (theo thứ tự) hoặc 1 video dài</p>
+      <small>hoặc <label class="link">chọn nhiều file<input type="file" accept="video/*" hidden multiple id="file-long"></label>, hoặc dán đường dẫn — MỖI DÒNG 1 video (ghép theo thứ tự trên xuống):</small>
+      <textarea class="pathbox" id="long-paths" rows="4" placeholder="H:\\...\\phan-1.mp4&#10;H:\\...\\phan-2.mp4&#10;H:\\...\\phan-3.mp4"></textarea>
+    </div>
+    <div class="opts">
+      <div class="optgroup">
+        <div class="optgroup-h">🧱 Cơ bản &amp; Cắt thông minh</div>
+        <label>Khung hình:
+          <select id="l-aspect"><option value="16:9">16:9 (ngang, YouTube)</option><option value="1:1">1:1 (vuông, có tiêu đề trên/dưới)</option></select>
+        </label>
+        <label>Cách vừa khung (16:9):
+          <select id="l-reframe"><option value="fit">Vừa khung (viền)</option><option value="fill">Cắt đầy</option></select>
+        </label>
+        <label><input type="checkbox" id="l-smart" checked> 🧠 <b>Cắt thông minh</b> (AI bỏ à/ừ + đoạn không có tri thức)</label>
+        <label><input type="checkbox" id="l-fillers"> ✂️ Chỉ cắt tiếng đệm (khi tắt cắt thông minh)</label>
+        <label><input type="checkbox" id="l-cut" checked> Cắt khoảng lặng</label>
+        <label><input type="checkbox" id="l-cap" checked> Phụ đề động (word-level)</label>
+        <label>Kiểu phụ đề:
+          <select id="l-capstyle"><option value="karaoke">Karaoke (highlight từng từ)</option><option value="popline">Pop từng cụm</option></select>
+        </label>
+        <label>Chất lượng nghe:
+          <select id="l-model"><option value="medium" selected>Whisper medium</option><option value="small">Whisper small (nhanh)</option></select>
+        </label>
+        <label>⏱️ Giới hạn phút/phần (dài hơn tự tách):
+          <input class="pathbox sm" id="l-maxmin" value="10" style="width:70px" />
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🔤 Tiêu đề (chỉ khung 1:1)</div>
+        <label>Tiêu đề TRÊN: <input class="pathbox sm wide" id="l-ttop" placeholder="VD: HOÀNG MINH HÓA" /></label>
+        <label>Tiêu đề DƯỚI: <input class="pathbox sm wide" id="l-tbot" placeholder="VD: BÀI HỌC KINH DOANH" /></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎬 Trám cảnh (b-roll)</div>
+        <label>Thư mục ảnh/clip trám (đặt tên theo từ khóa):
+          <input class="pathbox sm wide" id="l-broll" placeholder="H:\\...\\thu-muc-broll (để trống nếu không dùng)" />
+        </label>
+        <label>Cách trám:
+          <select id="l-brollfill"><option value="match">Chỉ cảnh khớp từ khóa</option><option value="all">Trám dày</option></select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🖼️ Thumbnail thương hiệu</div>
+        <label><input type="checkbox" id="l-thumb" checked> 🖼️ Tạo ảnh bìa (thumbnail thương hiệu)</label>
+        <label><input type="checkbox" id="l-mkcontent" checked> ✍️ Tạo tiêu đề + caption đăng bài (AI)</label>
+        <label><input type="checkbox" id="l-mklark"> 📤 Đăng Lark sau khi dựng <span class="muted" style="font-size:11px">(mặc định TẮT — sẽ hỏi)</span></label>
+        <label>Thư mục ảnh: <input class="pathbox sm wide" id="l-thumbdir" placeholder="tự điền từ cấu hình khi mở app" /></label>
+        <label>Tiêu đề trên bìa: <input class="pathbox sm wide" id="l-thumbtitle" placeholder="để trống = lấy tiêu đề trên" /></label>
+        <label>Tên hiển thị: <input class="pathbox sm" id="l-thumbname" /></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎨 Màu &amp; hiệu ứng</div>
+        <label>Color grade:
+          <select id="l-color"><option value="medium">Điện ảnh (vừa)</option><option value="high">Đậm</option><option value="low">Nhẹ</option><option value="off">Tắt</option></select>
+        </label>
+        <label>Làm mịn:
+          <select id="l-smooth"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+        </label>
+        <label>🎙️ Giữ giọng, khử tạp âm:
+          <select id="l-voice"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+        </label>
+        <label><input type="checkbox" id="l-film"> Vignette + grain</label>
+        <label><input type="checkbox" id="l-norm" checked> Chuẩn âm -14 LUFS</label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎵 Nhạc nền (tự lặp) &amp; logo</div>
+        <label><label class="link">chọn nhạc<input type="file" accept="audio/*" hidden id="file-lmusic"></label>
+          <input class="pathbox sm wide" id="l-music" placeholder="H:\\...\\nhac.mp3 (ngắn hơn video sẽ tự lặp)" />
+        </label>
+        <label>🔊 Âm lượng nhạc <b id="l-mvval">14</b>%<input type="range" id="l-mv" min="0" max="100" value="14"></label>
+        <span class="muted" style="font-size:11.5px">Logo thương hiệu tự chèn góc trên-trái (nếu có file assets/logo.png).</span>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎞️ Chuyển cảnh &amp; Intro / Outro</div>
+        <label>Chuyển cảnh giữa các đoạn ghép:
+          <select id="l-trans">
+            <option value="cut">Cắt thẳng (không hiệu ứng)</option>
+            <option value="fade">Mờ dần (fade)</option>
+            <option value="dissolve">Hoà tan (dissolve)</option>
+            <option value="fadeblack">Mờ qua đen</option>
+            <option value="slideleft">Trượt ngang</option>
+            <option value="wipeleft">Gạt màn (wipe)</option>
+            <option value="circleopen">Mở vòng tròn</option>
+          </select>
+        </label>
+        <label>🎬 Intro (đầu video):
+          <label class="link">chọn intro<input type="file" accept="video/*" hidden id="file-lintro"></label>
+          <input class="pathbox sm" id="l-intro" placeholder="H:\\...\\intro.mp4 (tuỳ chọn)" />
+        </label>
+        <label>🏁 Outro (cuối video):
+          <label class="link">chọn outro<input type="file" accept="video/*" hidden id="file-loutro"></label>
+          <input class="pathbox sm" id="l-outro" placeholder="H:\\...\\outro.mp4 (tuỳ chọn)" />
+        </label>
+      </div>
+    </div>
+    <div class="row">
+      <button class="dl" id="long-save">💾 Lưu project</button>
+      <button class="dl" id="long-open">📂 Mở lại project</button>
+      <button class="dl" id="long-rerun">🔁 Dựng lại (giữ phân tích · 0 token)</button>
+      <button class="go big" id="btn-long">🎬 Biên tập video dài →</button>
+    </div>
+    <div id="long-out"></div>
+  </section>
+
+  <!-- 🎙️ SHORT LỒNG VOICE (9:16) -->
+  <section id="tab-voice" class="panel">
+    <div class="hero-note">
+      <b>Nhiều clip bối cảnh + 1 file giọng đọc → 1 short lồng voice.</b> Voice-over là <b>audio chính &amp; là timeline</b>:
+      phụ đề bám theo voice, video ghép tự <b>lặp/cắt cho khớp độ dài giọng đọc</b>. Có trám b-roll theo lời, màu, hook, nhạc nền, logo — như short viral.
+    </div>
+    <div class="dropzone" id="dz-voice">
+      <p>Kéo–thả NHIỀU clip bối cảnh (theo thứ tự)</p>
+      <small>hoặc <label class="link">chọn nhiều clip<input type="file" accept="video/*" hidden multiple id="file-voiceclips"></label>, hoặc dán đường dẫn — MỖI DÒNG 1 clip:</small>
+      <textarea class="pathbox" id="voice-clips" rows="3" placeholder="H:\\...\\canh-1.mp4&#10;H:\\...\\canh-2.mp4"></textarea>
+    </div>
+    <div class="opts">
+      <div class="optgroup">
+        <div class="optgroup-h">🎨 Phong cách (1 bấm cấu hình sẵn)</div>
+        <label>Chọn phong cách:
+          <select id="voice-preset">
+            <option value="cinematic">🎬 Kể chuyện điện ảnh (như video mẫu FB)</option>
+            <option value="viral">⚡ Viral năng động (phụ đề karaoke + hook)</option>
+            <option value="custom">✋ Tùy chỉnh tay</option>
+          </select>
+        </label>
+        <span class="muted" style="font-size:11.5px">Kể chuyện điện ảnh = màu nhẹ tự nhiên, không phụ đề/hook, nhạc êm dưới giọng, cắt mượt. Đúng phong cách video mẫu.</span>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎙️ Giọng đọc (voice-over) — bắt buộc</div>
+        <label><label class="link">chọn file giọng đọc<input type="file" accept="audio/*" hidden id="file-voice"></label>
+          <input class="pathbox sm wide" id="voice-audio" placeholder="H:\\...\\giong-doc.mp3 (mp3/wav/m4a)" />
+        </label>
+        <label>🔊 Âm lượng giọng <b id="voice-vvval">100</b>%<input type="range" id="voice-vv" min="30" max="150" value="100"></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎬 Trám cảnh (b-roll) &amp; chuyển cảnh</div>
+        <label>Thư mục ảnh/clip trám:
+          <input class="pathbox sm wide" id="voice-broll" placeholder="H:\\...\\thu-muc-broll (để trống nếu không dùng)" />
+        </label>
+        <label>Cách trám:
+          <select id="voice-brollfill"><option value="match">Chỉ cảnh khớp từ khóa</option><option value="all">Trám dày</option></select>
+        </label>
+        <label>Chuyển cảnh giữa clip:
+          <select id="voice-trans"><option value="cut">Cắt thẳng</option><option value="fade">Mờ dần</option><option value="dissolve">Hoà tan</option></select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎨 Hiệu ứng &amp; phụ đề</div>
+        <label>Color grade:
+          <select id="voice-color"><option value="medium">Điện ảnh (vừa)</option><option value="high">Đậm</option><option value="low">Nhẹ</option><option value="off">Tắt</option></select>
+        </label>
+        <label>Làm mịn:
+          <select id="voice-smooth"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+        </label>
+        <label><input type="checkbox" id="voice-cap" checked> Phụ đề động (theo voice)</label>
+        <label>Kiểu phụ đề:
+          <select id="voice-capstyle"><option value="karaoke">Karaoke</option><option value="popline">Pop cụm</option></select>
+        </label>
+        <label><input type="checkbox" id="voice-film" checked> Vignette + grain</label>
+        <label><input type="checkbox" id="voice-prog"> Thanh tiến trình</label>
+        <label>✍️ Hook chữ to đầu video: <input class="pathbox sm wide" id="voice-hook" placeholder="để trống nếu không dùng" /></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎵 Nhạc nền (dưới giọng)</div>
+        <label><label class="link">chọn nhạc<input type="file" accept="audio/*" hidden id="file-voicemusic"></label>
+          <input class="pathbox sm wide" id="voice-music" placeholder="H:\\...\\nhac.mp3 (tự lặp, nhường giọng)" />
+        </label>
+        <label>🔊 Âm lượng nhạc <b id="voice-mvval">12</b>%<input type="range" id="voice-mv" min="0" max="60" value="12"></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">📦 Xuất bản (thumbnail · caption · Lark)</div>
+        <label><input type="checkbox" id="voice-mkthumb" checked> 🖼️ Tạo thumbnail thương hiệu</label>
+        <label><input type="checkbox" id="voice-mkcontent" checked> ✍️ Tạo tiêu đề + caption đăng bài (AI)</label>
+        <label><input type="checkbox" id="voice-mklark"> 📤 Đăng Lark sau khi dựng <span class="muted" style="font-size:11px">(mặc định TẮT — sẽ hỏi)</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <button class="dl" id="voice-save">💾 Lưu project</button>
+      <button class="dl" id="voice-open">📂 Mở lại project</button>
+      <button class="dl" id="voice-rerun">🔁 Dựng lại (giữ phân tích · 0 token)</button>
+      <button class="go big" id="btn-voice">🎙️ Dựng short lồng voice →</button>
+    </div>
+    <div id="voice-out"></div>
+  </section>
+
+  <!-- 🛋️ NỘI THẤT CHO CON -->
+  <section id="tab-interior" class="panel">
+    <div class="hero-note">
+      <b>Video nội thất cho con.</b> Lật video · tải video thô · lồng giọng (ghi âm hoặc file) ·
+      tăng tốc hình &amp; giọng · cắt "à ừ" · logo Nội Thất Cho Con · hiệu ứng chữ ·
+      <b>từ khóa cảm xúc phóng to giữa màn</b> · chỉnh giọng như CapCut.
+    </div>
+
+    <!-- ① VIDEO THÔ -->
+    <div class="dropzone" id="dz-interior">
+      <p>Kéo–thả VIDEO THÔ, hoặc dán đường dẫn</p>
+      <input class="pathbox" id="int-path" placeholder="H:\\...\\video-noi-that.mp4" />
+    </div>
+
+    <div class="opts">
+      <!-- ② GIỌNG ĐỌC -->
+      <div class="optgroup">
+        <div class="optgroup-h">② 🎙️ Giọng đọc (ghi âm trực tiếp hoặc chọn file)</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <button class="dl" id="int-rec">🔴 Ghi âm</button>
+          <span class="muted" id="int-rec-status" style="font-size:12px">chưa ghi</span>
+          <label class="link">hoặc chọn file giọng<input type="file" accept="audio/*,video/*" hidden id="int-voicefile"></label>
+        </div>
+        <audio id="int-voice-preview" controls style="width:100%;display:none;margin-top:6px"></audio>
+        <input class="pathbox sm wide" id="int-voice" placeholder="đường dẫn file giọng (tự điền sau khi ghi/chọn)" />
+        <label>Khi có giọng riêng:
+          <select id="int-voicemode">
+            <option value="replace">Thay hẳn tiếng gốc</option>
+            <option value="mix">Trộn cùng tiếng gốc</option>
+          </select>
+        </label>
+        <label>🔊 Âm lượng giọng <b id="int-vvval">100</b>%<input type="range" id="int-vv" min="30" max="150" value="100" style="width:100%"></label>
+      </div>
+
+      <!-- ③ CHỈNH GIỌNG KIỂU CAPCUT -->
+      <div class="optgroup">
+        <div class="optgroup-h">③ 🎚️ Chỉnh giọng như CapCut</div>
+        <label>Tông giọng:
+          <select id="int-tone">
+            <option value="normal">Bình thường</option>
+            <option value="warm">Trầm ấm</option>
+            <option value="bright">Trong trẻo</option>
+            <option value="child">Trẻ em</option>
+            <option value="deep">Rất trầm</option>
+          </select>
+        </label>
+        <label>Cao độ (nửa cung) <b id="int-pitchval">0</b>
+          <input type="range" id="int-pitch" min="-12" max="12" value="0" style="width:100%">
+        </label>
+        <label>⏩ Tốc độ giọng:
+          <select id="int-vspeed"><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.2">1.2×</option></select>
+        </label>
+        <label>🎙️ Khử tạp âm giọng:
+          <select id="int-voiceclean"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+        </label>
+      </div>
+
+      <!-- ④ HÌNH ẢNH -->
+      <div class="optgroup">
+        <div class="optgroup-h">④ 🎞️ Hình ảnh</div>
+        <label><input type="checkbox" id="int-flip"> 🔁 Lật video (gương ngang)</label>
+        <label>⏩ Tốc độ video:
+          <select id="int-speed"><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.2">1.2×</option></select>
+        </label>
+        <label>Khung hình:
+          <select id="int-aspect">
+            <option value="keep">Giữ khung gốc</option>
+            <option value="916blur">9:16 nền mờ</option>
+            <option value="916fill">9:16 cắt đầy</option>
+          </select>
+        </label>
+        <label>Color grade:
+          <select id="int-color"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Đậm</option></select>
+        </label>
+        <label>Làm mịn:
+          <select id="int-smooth"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+        </label>
+        <label><input type="checkbox" id="int-cutfillers" checked> ✂️ Cắt "à ừ" + khoảng chết</label>
+      </div>
+
+      <!-- ⑤ CHỮ & LOGO -->
+      <div class="optgroup">
+        <div class="optgroup-h">⑤ ✍️ Chữ &amp; Logo</div>
+        <label><input type="checkbox" id="int-cap" checked> Phụ đề động (Roboto, theo giọng)</label>
+        <label>Kiểu phụ đề:
+          <select id="int-capstyle"><option value="karaoke">Karaoke</option><option value="popline">Pop cụm</option></select>
+        </label>
+        <label>🔑 Từ khóa PHÓNG TO GIỮA MÀN (cách nhau dấu phẩy — khi nói tới sẽ nảy to):
+          <input class="pathbox sm wide" id="int-keywords" placeholder="VD: ấm áp, gia đình, an toàn, yêu thương" />
+        </label>
+        <label>✍️ Hook chữ to đầu video:
+          <input class="pathbox sm wide" id="int-hook" placeholder="để trống nếu không dùng" />
+        </label>
+        <label>✍️ Chữ tay (hiện suốt video):
+          <input class="pathbox sm wide" id="int-overlay" placeholder="VD: NỘI THẤT CHO CON" />
+        </label>
+        <label>Vị trí chữ tay:
+          <select id="int-overlaypos"><option value="bottom">Dưới</option><option value="top">Trên</option><option value="middle">Giữa</option></select>
+        </label>
+        <label>🏷️ Logo (mặc định lấy Tài nguyên/logo-noi-that-cho-con.png nếu có):
+          <label class="link">chọn logo<input type="file" accept="image/*" hidden id="int-logofile"></label>
+          <input class="pathbox sm wide" id="int-logo" placeholder="đường dẫn logo .png (nền trong suốt)" />
+        </label>
+        <label>Vị trí logo:
+          <select id="int-logopos">
+            <option value="br">Dưới phải</option><option value="tr">Trên phải</option>
+            <option value="tl">Trên trái</option><option value="bl">Dưới trái</option><option value="center">Giữa</option>
+          </select>
+        </label>
+        <label>Cỡ logo <b id="int-logosizeval">16</b>%<input type="range" id="int-logosize" min="6" max="40" value="16" style="width:100%"></label>
+      </div>
+
+      <!-- ⑥ XUẤT BẢN -->
+      <div class="optgroup">
+        <div class="optgroup-h">⑥ 📦 Xuất bản</div>
+        <label><input type="checkbox" id="int-norm" checked> Chuẩn âm -14 LUFS</label>
+        <label><input type="checkbox" id="int-mkthumb" checked> 🖼️ Tạo thumbnail thương hiệu</label>
+        <label><input type="checkbox" id="int-mkcontent" checked> ✍️ Tạo tiêu đề + caption (AI)</label>
+        <label><input type="checkbox" id="int-mklark"> 📤 Đăng Lark sau khi dựng</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="go big" id="btn-interior">🛋️ Dựng video nội thất cho con →</button>
+    </div>
+    <div id="interior-out"></div>
+  </section>
+
+  <!-- ĐÁNH GIÁ -->
+  <section id="tab-eval" class="panel">
+    <div class="dropzone" id="dz-eval">
+      <p>Kéo–thả video short vào đây</p>
+      <small>hoặc <label class="link">chọn file<input type="file" accept="video/*" hidden id="file-eval"></label>, hoặc dán đường dẫn bên dưới</small>
+      <input class="pathbox" id="path-eval" placeholder="H:\\...\\video.mp4 (đường dẫn trên máy)" />
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="eval-deep"> Phân tích sâu bằng AI cloud (chậm hơn, cần claude)</label>
+      <select id="eval-model">
+        <option value="small">Whisper small (nhanh)</option>
+        <option value="medium">Whisper medium (chuẩn hơn)</option>
+      </select>
+      <button class="dl" id="btn-standard">🏅 Chấm theo Tiêu chuẩn (100đ)</button>
+      <button class="go" id="btn-eval">Chấm điểm viral →</button>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:-6px">🏅 = chấm theo BỘ TIÊU CHUẨN VIDEO HOÀN THIỆN (9 hạng mục · 100 điểm) + checklist + điều cấm kỵ. Sửa chuẩn tại <code>standards/tieu-chuan-video.md</code>.</div>
+    <div id="eval-out"></div>
+  </section>
+
+  <!-- BIÊN TẬP -->
+  <section id="tab-edit" class="panel">
+    <div class="dropzone" id="dz-edit">
+      <p>Kéo–thả video thô vào đây</p>
+      <small>hoặc <label class="link">chọn file<input type="file" accept="video/*" hidden id="file-edit"></label>, hoặc dán đường dẫn</small>
+      <input class="pathbox" id="path-edit" placeholder="H:\\...\\video.mp4" />
+    </div>
+    <div class="opts">
+      <div class="optgroup">
+        <div class="optgroup-h">🎬 Trám bối cảnh (b-roll)</div>
+        <label><input type="checkbox" id="e-aibroll"> 🤖 B-roll AI tự tạo (Higgsfield)</label>
+        <label>Số cảnh AI: <input class="pathbox sm" id="e-aicount" value="6" style="width:70px" /></label>
+        <label>hoặc thư mục của anh:
+          <input class="pathbox sm wide" id="e-broll" placeholder="H:\\...\\thu-muc-hinh-clip (ảnh/video, đặt tên theo từ khóa)" />
+        </label>
+        <label>Cách trám:
+          <select id="e-brollfill">
+            <option value="match">Chỉ cảnh khớp từ khóa</option>
+            <option value="all">Trám dày (khớp + xoay vòng lấp)</option>
+          </select>
+        </label>
+        <label>Chuyển cảnh:
+          <select id="e-trans">
+            <option value="fade">Mờ dần (fade)</option>
+            <option value="slide">Trượt vào (slide)</option>
+          </select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🎨 Màu &amp; ánh sáng</div>
+        <label>Color grade:
+          <select id="e-color">
+            <option value="medium">Điện ảnh (vừa)</option>
+            <option value="high">Đậm (mạnh)</option>
+            <option value="low">Nhẹ</option>
+            <option value="off">Tắt</option>
+          </select>
+        </label>
+        <label>Sáng <b id="e-brival">0</b><input type="range" id="e-bri" min="-100" max="100" value="0"></label>
+        <label>Tương phản <b id="e-conval">0</b><input type="range" id="e-con" min="-100" max="100" value="0"></label>
+        <label>Bão hoà <b id="e-satval">0</b><input type="range" id="e-sat" min="-100" max="100" value="0"></label>
+        <label>Ấm/Lạnh <b id="e-warval">0</b><input type="range" id="e-war" min="-100" max="100" value="0"></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">✨ Hiệu ứng</div>
+        <label><input type="checkbox" id="e-punch" checked> Punch-zoom theo nhịp</label>
+        <label><input type="checkbox" id="e-shake" checked> Camera shake</label>
+        <label><input type="checkbox" id="e-flash" checked> Flash chuyển cảnh</label>
+        <label><input type="checkbox" id="e-film" checked> Vignette + grain</label>
+        <label><input type="checkbox" id="e-prog" checked> Progress bar</label>
+        <label><input type="checkbox" id="e-sfx"> 🔊 Sound effect (whoosh)</label>
+        <label>Làm mịn video:
+          <select id="e-smooth">
+            <option value="off">Tắt</option>
+            <option value="low">Nhẹ</option>
+            <option value="medium">Vừa</option>
+            <option value="high">Mạnh</option>
+          </select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🖼️ Logo &amp; nhạc</div>
+        <label>Logo:
+          <label class="link">chọn logo<input type="file" accept="image/*" hidden id="file-logo"></label>
+          <input class="pathbox sm" id="e-logo" placeholder="H:\\...\\logo.png (nền trong suốt)" />
+        </label>
+        <label>Vị trí:
+          <select id="e-logopos">
+            <option value="br">Dưới phải</option><option value="tr">Trên phải</option>
+            <option value="tl">Trên trái</option><option value="bl">Dưới trái</option>
+            <option value="center">Giữa</option>
+          </select>
+        </label>
+        <label>Cỡ logo <b id="e-logosizeval">16</b>%<input type="range" id="e-logosize" min="6" max="40" value="16"></label>
+        <label>Nhạc nền:
+          <label class="link">chọn nhạc<input type="file" accept="audio/*" hidden id="file-music"></label>
+          <input class="pathbox sm" id="e-music" placeholder="H:\\...\\nhac.mp3" />
+        </label>
+        <label>🎙️ Giữ giọng, khử tạp âm:
+          <select id="e-voice">
+            <option value="off">Tắt</option>
+            <option value="low">Nhẹ</option>
+            <option value="medium">Vừa</option>
+            <option value="high">Mạnh</option>
+          </select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🧱 Cơ bản</div>
+        <label><input type="checkbox" id="e-fillers" checked> ✂️ Cắt sạch tiếng đệm (à/ừ/ờ) + khoảng chết</label>
+        <label><input type="checkbox" id="e-cut" checked> Cắt khoảng lặng</label>
+        <label><input type="checkbox" id="e-cap" checked> Phụ đề động (word-level)</label>
+        <label><input type="checkbox" id="e-norm" checked> Chuẩn âm -14 LUFS</label>
+        <label>Khung hình:
+          <select id="e-reframe">
+            <option value="blur">9:16 nền mờ (fit)</option>
+            <option value="fill">9:16 cắt đầy (fill)</option>
+            <option value="none">Giữ nguyên (pad)</option>
+          </select>
+        </label>
+        <label>Kiểu phụ đề:
+          <select id="e-capstyle">
+            <option value="karaoke">Karaoke (highlight từng từ)</option>
+            <option value="popline">Pop từng cụm</option>
+          </select>
+        </label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">📦 Xuất bản (thumbnail · caption · Lark)</div>
+        <label><input type="checkbox" id="e-mkthumb" checked> 🖼️ Tạo thumbnail thương hiệu</label>
+        <label><input type="checkbox" id="e-mkcontent" checked> ✍️ Tạo tiêu đề + caption đăng bài (AI)</label>
+        <label><input type="checkbox" id="e-mklark"> 📤 Đăng Lark sau khi dựng <span class="muted" style="font-size:11px">(mặc định TẮT — sẽ hỏi)</span></label>
+      </div>
+    </div>
+    <div class="row"><button class="go" id="btn-edit">Biên tập thành bản viral →</button></div>
+    <div id="edit-out"></div>
+  </section>
+
+  <!-- BÓC Ý TƯỞNG -->
+  <section id="tab-extract" class="panel">
+    <div class="dropzone tall" id="dz-extract">
+      <p>Dán LINK video viral (TikTok/YT/Reels/FB)</p>
+      <input class="pathbox" id="ex-url" placeholder="https://... (yt-dlp sẽ tải về)" />
+      <small>hoặc dán đường dẫn file trên máy:</small>
+      <input class="pathbox" id="ex-path" placeholder="H:\\...\\video.mp4" />
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="ex-deep" checked> Bóc công thức bằng AI cloud</label>
+      <button class="go" id="btn-extract">Bóc ý tưởng →</button>
+    </div>
+    <div id="extract-out"></div>
+  </section>
+
+  <!-- HÀNG LOẠT -->
+  <section id="tab-batch" class="panel">
+    <div class="dropzone tall" id="dz-batch">
+      <p>Xử lý cả một THƯ MỤC video</p>
+      <input class="pathbox" id="b-folder" placeholder="H:\\...\\thu-muc-video (đường dẫn thư mục trên máy)" />
+    </div>
+    <div class="opts">
+      <label>Chế độ:
+        <select id="b-mode">
+          <option value="evaluate">Chấm điểm tất cả</option>
+          <option value="edit">Biên tập viral tất cả</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="b-cut" checked> Cắt khoảng lặng</label>
+      <label><input type="checkbox" id="b-cap" checked> Phụ đề động</label>
+      <label><input type="checkbox" id="b-norm" checked> Chuẩn âm</label>
+    </div>
+    <div class="row"><button class="go" id="btn-batch">Chạy hàng loạt →</button></div>
+    <div id="batch-out"></div>
+  </section>
+
+  <!-- ⚙️ CẤU HÌNH (mỗi học viên tự khai Lark Base + Thương hiệu của mình) -->
+  <section id="tab-config" class="panel">
+    <div class="hero-note">
+      <b>Khai một lần cho máy của bạn.</b> Cấu hình lưu vào máy này (file <code>settings.local.json</code>),
+      áp dụng ngay — <b>không cần khởi động lại</b>. Bỏ trống cũng chạy, chỉ là không đăng Lark / không in thương hiệu.
+    </div>
+
+    <!-- A. LARK BASE -->
+    <div class="opts">
+      <div class="optgroup" style="flex:1 1 100%">
+        <div class="optgroup-h">📤 Đăng lên Lark Base — dán link bảng của BẠN</div>
+        <p class="muted" style="font-size:12.5px;margin:2px 0 8px">
+          Trạng thái: <b id="cfg-lark-state">đang kiểm tra…</b>
+        </p>
+        <label>① Dán link Lark Base (mở bảng bạn muốn đăng video vào → copy link trên trình duyệt):
+          <input class="pathbox sm wide" id="cfg-lark-link" placeholder="https://xxx.larksuite.com/base/BASCN...?table=tbl..." />
+        </label>
+        <div class="row" style="margin:6px 0">
+          <button class="dl" id="cfg-probe">🔎 Dò bảng &amp; cột</button>
+          <span class="muted" id="cfg-probe-status" style="font-size:12px;margin-left:8px"></span>
+        </div>
+
+        <div id="cfg-map" style="display:none">
+          <label>② Chọn BẢNG đăng vào:
+            <select id="cfg-table" class="pathbox sm"></select>
+          </label>
+          <div class="row" style="margin:4px 0 8px">
+            <button class="dl" id="cfg-loadfields">↻ Nạp cột của bảng này</button>
+          </div>
+          <div id="cfg-fields" style="display:none">
+            <label>③ Cột đính kèm VIDEO <b>(bắt buộc)</b>:
+              <select id="cfg-f-attach" class="pathbox sm"></select>
+            </label>
+            <label>Cột ẢNH BÌA / thumbnail (tuỳ chọn):
+              <select id="cfg-f-thumb" class="pathbox sm"></select>
+            </label>
+            <label>Cột NỘI DUNG / caption:
+              <select id="cfg-f-content" class="pathbox sm"></select>
+            </label>
+            <label>Cột LOẠI (select) — tuỳ chọn:
+              <select id="cfg-f-loai" class="pathbox sm"></select>
+            </label>
+            <label>Giá trị điền vào cột Loại:
+              <input class="pathbox sm" id="cfg-loai-value" placeholder="Video" style="width:140px" />
+            </label>
+            <label>Cột FANPAGE (link) — tuỳ chọn:
+              <select id="cfg-f-fanpage" class="pathbox sm"></select>
+            </label>
+            <label>Record ID Fanpage mặc định (tuỳ chọn):
+              <input class="pathbox sm wide" id="cfg-fanpage-rec" placeholder="recXXXX (để trống nếu không dùng)" />
+            </label>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="go" id="cfg-save-lark">💾 Lưu cấu hình Lark</button>
+          <span class="muted" id="cfg-lark-savestatus" style="font-size:12.5px;margin-left:8px"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B. THƯƠNG HIỆU & THUMBNAIL -->
+    <div class="opts">
+      <div class="optgroup" style="flex:1 1 100%">
+        <div class="optgroup-h">🖼️ Thương hiệu &amp; Thumbnail (mỗi học viên một kiểu)</div>
+        <label>Tên thương hiệu (in trên thumbnail + định hướng AI viết caption):
+          <input class="pathbox sm wide" id="cfg-brand-name" placeholder="VD: Tên Kênh Của Bạn" />
+        </label>
+        <label>Lĩnh vực / chủ đề kênh (giúp AI chọn đúng đoạn &amp; viết đúng chất):
+          <input class="pathbox sm wide" id="cfg-brand-niche" placeholder="VD: nấu ăn healthy / kinh doanh / phát triển bản thân" />
+        </label>
+        <label>Màu nhấn thương hiệu:
+          <input type="color" id="cfg-brand-color" value="#d3102e" style="width:60px;height:32px;vertical-align:middle" />
+        </label>
+        <label>Chữ phụ ở header:
+          <input class="pathbox sm wide" id="cfg-brand-system" placeholder="Viral Short Studio" />
+        </label>
+        <label>Thư mục ẢNH CHÂN DUNG để dựng bìa thương hiệu (tuỳ chọn):
+          <input class="pathbox sm wide" id="cfg-brand-thumbdir" placeholder="H:\\...\\anh-chan-dung (để trống = bỏ qua bìa thương hiệu)" />
+        </label>
+        <div class="row" style="margin-top:8px">
+          <button class="go" id="cfg-save-brand">💾 Lưu thương hiệu</button>
+          <span class="muted" id="cfg-brand-savestatus" style="font-size:12.5px;margin-left:8px"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOG chung -->
+  <section class="logbox" id="logbox" hidden>
+    <div class="loghead"><span id="logstatus">…</span> <button id="logtoggle">Ẩn log</button></div>
+    <pre id="log"></pre>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

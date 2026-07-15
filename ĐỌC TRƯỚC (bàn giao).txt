@@ -1,0 +1,73 @@
+╔══════════════════════════════════════════════════════════╗
+║   🎬  VIRAL SHORT STUDIO  —  BẢN BÀN GIAO HỌC VIÊN         ║
+║        (white-label · chạy Windows + macOS)               ║
+╚══════════════════════════════════════════════════════════╝
+
+Phần mềm cắt video dài thành nhiều short viral: AI tự tìm đoạn hay,
+cắt 9:16, phụ đề động, hook, logo, nhạc nền, thumbnail, nối CTA.
+
+Bản này là bản TRẮNG (white-label): CHƯA gắn thương hiệu ai cả —
+mỗi người tự gắn thương hiệu riêng của mình (xem mục ③).
+
+
+────────────────────────────────────────────────────────────
+① CÀI ĐẶT — TÙY MÁY
+────────────────────────────────────────────────────────────
+• MÁY WINDOWS:
+    1. Bấm đúp:  CÀI ĐẶT (chạy 1 lần).bat
+    2. Xong thì bấm đúp:  MỞ PHẦN MỀM.vbs
+    (Chi tiết: mở  HƯỚNG DẪN.txt)
+
+• MÁY MAC:
+    1. Làm bước "mở khoá lần đầu" trong  HƯỚNG DẪN (Mac).txt
+    2. Bấm đúp:  CÀI ĐẶT (Mac).command
+    3. Xong thì bấm đúp:  MỞ PHẦN MỀM (Mac).command
+
+Phần mềm mở ra trong trình duyệt tại:  http://localhost:5178
+
+
+────────────────────────────────────────────────────────────
+② VIDEO XUẤT RA NẰM Ở ĐÂU?
+────────────────────────────────────────────────────────────
+Trong thư mục phần mềm:   work/out
+
+
+────────────────────────────────────────────────────────────
+③ GẮN THƯƠNG HIỆU + NỐI LARK BASE  (làm ngay trong phần mềm)
+────────────────────────────────────────────────────────────
+Mở phần mềm → vào tab  "⚙️ Cấu hình"  (không cần sửa file nào):
+
+• 🖼️ Thương hiệu & Thumbnail: điền Tên kênh, Lĩnh vực, Màu nhấn,
+  Thư mục ảnh chân dung → bấm Lưu. Áp dụng NGAY, không cần khởi
+  động lại. (Lĩnh vực giúp AI chọn đúng "chất" nội dung của bạn.)
+
+• 📤 Đăng lên Lark Base của BẠN: DÁN LINK bảng Lark của bạn →
+  bấm "Dò bảng & cột" → chọn Bảng + chọn Cột đính kèm video
+  (và Thumbnail/Nội dung/Loại nếu muốn) → Lưu. Xong là đăng được.
+  (Mỗi học viên một bảng khác nhau — cứ dán link bảng của mình.)
+
+Ngoài ra:
+1. Thả logo của bạn vào  assets/logo.png  → tự chèn watermark.
+2. Thả nhạc nền / video CTA vào thư mục  "Tài nguyên"  (xem README).
+
+→ Cấu hình lưu riêng ở  settings.local.json  trên máy bạn (không
+  lộ ra ngoài). Bỏ qua hết mục ③ cũng chạy, chỉ là không có
+  tên/logo riêng và không đăng Lark.
+
+
+────────────────────────────────────────────────────────────
+④ CẦN GÌ TRÊN MÁY (bộ cài tự lo hết)
+────────────────────────────────────────────────────────────
+Node.js · FFmpeg · Python + faster-whisper · yt-dlp · Claude CLI.
+File "CÀI ĐẶT" tự cài tất cả. Cần tài khoản Claude (Anthropic) để
+dùng "bộ não AI" chọn đoạn — không có vẫn cắt được theo chế độ
+dự phòng (chia theo câu nói).
+
+
+────────────────────────────────────────────────────────────
+⑤ RIÊNG TƯ / BẢN QUYỀN
+────────────────────────────────────────────────────────────
+• Bản này ĐÃ bóc sạch dữ liệu cá nhân của người tạo (không token,
+  không video mẫu, không logo riêng).
+• KHÔNG commit / chia sẻ file  .env  của bạn (chứa cấu hình riêng).
+• Chỉ dùng nhạc/hình bạn có quyền sử dụng.

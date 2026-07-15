@@ -1,0 +1,72 @@
+╔══════════════════════════════════════════════════════════╗
+║     🎬  VIRAL SHORT STUDIO  —  HƯỚNG DẪN cho macOS         ║
+╚══════════════════════════════════════════════════════════╝
+
+Phần mềm giống hệt bản Windows — chỉ khác cách CÀI và MỞ.
+Cùng một phần mềm chạy được cả Windows lẫn Mac.
+
+
+────────────────────────────────────────────────────────────
+① MỞ KHOÁ LẦN ĐẦU  (chỉ làm 1 lần, ~30 giây)
+────────────────────────────────────────────────────────────
+File chép từ Windows sang Mac chưa được phép "bấm đúp".
+Làm 1 lần cho phép:
+
+1. Mở TERMINAL:
+   • Nhấn  Command (⌘) + phím cách  → gõ:  Terminal  → Enter.
+
+2. Trong Terminal, gõ đúng chữ này (CÓ 1 DẤU CÁCH ở cuối):
+        chmod +x
+
+3. KÉO–THẢ cả 3 file "... (Mac).command" từ Finder vào cửa sổ
+   Terminal (đường dẫn tự điền vào). Rồi nhấn Enter.
+
+   → Xong. Từ giờ bấm đúp các file được rồi.
+
+   (Nếu Mac báo "không xác minh được nhà phát triển":
+    bấm CHUỘT PHẢI vào file → Open → Open.)
+
+
+────────────────────────────────────────────────────────────
+② CÀI ĐẶT  (chỉ làm 1 lần)
+────────────────────────────────────────────────────────────
+• Bấm đúp:  CÀI ĐẶT (Mac).command
+
+  Nó tự cài: Homebrew, Node.js, FFmpeg, Python, faster-whisper,
+  yt-dlp, Claude CLI. Có thể HỎI MẬT KHẨU MÁY của bạn (gõ vào,
+  màn hình không hiện ký tự là bình thường) — mất vài phút.
+
+• Bước cuối mở ĐĂNG NHẬP CLAUDE bằng trình duyệt (cần tài khoản
+  Anthropic). Không cần AI thì gõ  n  rồi Enter để bỏ qua.
+
+
+────────────────────────────────────────────────────────────
+③ HÀNG NGÀY: MỞ PHẦN MỀM
+────────────────────────────────────────────────────────────
+• Bấm đúp:  MỞ PHẦN MỀM (Mac).command
+  → Trình duyệt tự mở phần mềm tại  http://localhost:5178
+
+• Dùng y hệt bản Windows: tab 🧠 "Cắt tự động" → kéo-thả video
+  dài vào → bấm chạy. Tinh chỉnh từng short, tải kèm logo/nhạc/CTA.
+
+
+────────────────────────────────────────────────────────────
+④ TẮT PHẦN MỀM
+────────────────────────────────────────────────────────────
+• Bấm đúp:  TẮT PHẦN MỀM (Mac).command
+  (hoặc nhấn Ctrl+C trong cửa sổ đang chạy server).
+
+
+────────────────────────────────────────────────────────────
+LƯU Ý (Mac)
+────────────────────────────────────────────────────────────
+• Video xuất ra nằm trong thư mục:  work/out
+• Máy Mac KHÔNG có tăng tốc NVIDIA — phần mềm tự chạy bằng CPU
+  (chậm hơn Windows có card NVIDIA, nhưng vẫn chạy đủ tính năng).
+• Chưa đăng nhập Claude: phần mềm VẪN cắt được theo chế độ dự
+  phòng (chia đoạn theo câu nói).
+• Bìa "thumbnail thương hiệu" chỉ bật khi bạn đặt biến môi trường
+  VSS_THUMB_DIR trỏ tới thư mục ảnh của bạn (không có cũng chạy
+  bình thường, chỉ thiếu bìa thương hiệu).
+• Không mở được: bấm đúp "MỞ PHẦN MỀM (Mac).command" lại, hoặc
+  mở trình duyệt gõ:  http://localhost:5178

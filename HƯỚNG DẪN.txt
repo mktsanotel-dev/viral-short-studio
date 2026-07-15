@@ -1,0 +1,75 @@
+╔══════════════════════════════════════════════════════════╗
+║        🎬  VIRAL SHORT STUDIO  —  HƯỚNG DẪN NHANH         ║
+╚══════════════════════════════════════════════════════════╝
+
+Phần mềm cắt video dài của chương trình thành nhiều video short
+viral: AI tự tìm đoạn hay (có triết lý), cắt 9:16, phụ đề động,
+hook 3 giây, logo, nhạc nền, thumbnail, và nối CTA.
+
+
+────────────────────────────────────────────────────────────
+① LẦN ĐẦU: CÀI ĐẶT  (chỉ làm 1 lần)
+────────────────────────────────────────────────────────────
+1. Bấm đúp vào file:   CÀI ĐẶT (chạy 1 lần).bat
+2. Làm theo hướng dẫn trên màn hình.
+   • Nếu nó báo "đóng và chạy lại" → đóng cửa sổ, bấm đúp
+     "CÀI ĐẶT (chạy 1 lần).bat" thêm 1 lần nữa.
+   • Bước cuối sẽ mở đăng nhập CLAUDE (cần tài khoản Anthropic).
+     Đăng nhập bằng trình duyệt như hướng dẫn.
+
+3. (Tuỳ chọn) Bấm đúp "TẠO LỐI TẮT MÀN HÌNH.vbs" để có biểu
+   tượng ngoài Desktop cho tiện.
+
+4. (Khuyên dùng) Bấm đúp "BẬT TỰ KHỞI ĐỘNG LẠI.bat" — để phần
+   mềm TỰ HỒI PHỤC nếu bị tắt (cứ 2 phút kiểm tra, chết thì tự bật).
+
+
+────────────────────────────────────────────────────────────
+② HÀNG NGÀY: MỞ PHẦN MỀM
+────────────────────────────────────────────────────────────
+• Bấm đúp:   MỞ PHẦN MỀM.vbs
+  (hoặc biểu tượng "Viral Short Studio" ngoài màn hình)
+
+• Phần mềm mở ra như một CỬA SỔ APP riêng.
+  Vào tab 🧠 "Cắt tự động" → kéo-thả video dài vào → bấm chạy.
+
+• AI tự chấm CẢM XÚC mỗi đoạn: mỗi short hiện ❤️ tông cảm xúc
+  và 🔥 CÂU CAO TRÀO (câu đắt nhất) — có dấu 🔥 trên timeline.
+
+• Khi ra kết quả: kéo logo trên từng video, chọn nhạc + CTA,
+  rồi bấm "Tải kèm logo/nhạc/CTA".
+
+
+────────────────────────────────────────────────────────────
+②b  TINH CHỈNH TỪNG SHORT  (không cần chạy lại AI)
+────────────────────────────────────────────────────────────
+Mỗi short có nút "✏️ Tinh chỉnh" — sửa xong bấm "🔁 Dựng lại
+short này" (chỉ dựng lại short đó, rất nhanh):
+
+• 🎚️ KÉO CẮT trên video gốc: kéo 2 tay nắm để đổi điểm vào/ra
+  (khung hình nhảy theo để xem trước). Hoặc nút ±0.3s / ±1s.
+• 📝 SỬA PHỤ ĐỀ: mỗi dòng 1 câu — chữ sai thì sửa, karaoke tự khớp.
+• ⏩ ĐỔI TỐC ĐỘ: 0.5×–2.0× (phụ đề vẫn khớp).
+• ✍️ CHÈN CHỮ TAY: gõ chữ đè lên video (Trên/Giữa/Dưới).
+• Bật/tắt hiệu ứng: khung 9:16, màu, punch-zoom, vignette, hook…
+
+Tải được NHIỀU short liên tiếp — app KHÔNG bị mất trang.
+
+
+────────────────────────────────────────────────────────────
+③ TẮT PHẦN MỀM
+────────────────────────────────────────────────────────────
+• Đóng cửa sổ app, rồi bấm đúp "TẮT PHẦN MỀM.bat"
+  (để giải phóng máy).
+
+
+────────────────────────────────────────────────────────────
+LƯU Ý
+────────────────────────────────────────────────────────────
+• Máy có card đồ hoạ NVIDIA sẽ chạy nhanh hơn nhiều.
+• Video xuất ra nằm trong thư mục:  work\out
+• Cần tài khoản Claude (Anthropic) để dùng "bộ não" chọn đoạn.
+  Nếu chưa đăng nhập Claude, phần mềm vẫn cắt được theo chế độ
+  dự phòng (chia đoạn theo câu nói).
+• Gặp lỗi "không mở được": bấm đúp "MỞ PHẦN MỀM.vbs" lại,
+  hoặc mở trình duyệt gõ:  http://localhost:5178
