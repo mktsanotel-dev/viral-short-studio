@@ -17,6 +17,7 @@ import { postToLark, parseBaseUrl, probeBase, larkStatus } from "./lib/larkpost.
 import { longEdit } from "./lib/longedit.mjs";
 import { voiceShort } from "./lib/voiceshort.mjs";
 import { interiorEdit } from "./lib/interior.mjs";
+import { textToSpeech, TTS_VOICES } from "./lib/tts.mjs";
 import { runStandard } from "./lib/standard.mjs";
 import { BRAND, DEFAULTS, PRESETS, applyBrandSettings } from "./lib/presets.mjs";
 import { publishOutputs } from "./lib/publish.mjs";
@@ -86,6 +87,9 @@ const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8", ".mp4": "video/mp4", ".jpg": "image/jpeg",
   ".png": "image/png", ".json": "application/json", ".srt": "text/plain",
+  // âm thanh (nghe thử giọng AI / voice tải lên)
+  ".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/mp4",
+  ".ogg": "audio/ogg", ".webm": "audio/webm",
 };
 
 const server = http.createServer(async (req, res) => {
@@ -181,6 +185,25 @@ const server = http.createServer(async (req, res) => {
       const dest = path.join(baseDir, safe);
       fs.writeFileSync(dest, buf);
       return send(res, 200, { ok: true, path: dest, name, dir: baseDir });
+    }
+
+    // ---- 🔊 VĂN BẢN → GIỌNG AI (dùng chung cho MỌI tab cần voice) ----
+    // GET: danh sách giọng · POST: tạo file giọng từ văn bản, trả đường dẫn dùng được ngay.
+    if (req.method === "GET" && p === "/api/tts/voices") {
+      return send(res, 200, { voices: TTS_VOICES });
+    }
+    if (req.method === "POST" && p === "/api/tts") {
+      const body = await readJSONBody(req);
+      if (!String(body.text || "").trim()) return send(res, 400, { error: "chưa có văn bản để đọc" });
+      const job = newJob("tts");
+      runJob(job, async (onLog) => textToSpeech(body.text, {
+        voice: body.voice || "vi-VN-HoaiMyNeural",
+        rate: body.rate ?? 0,
+        pitch: body.pitch ?? 0,
+        volume: body.volume ?? 0,
+        onLog,
+      }));
+      return send(res, 200, { jobId: job.id });
     }
 
     // ---- Phục vụ / tải file (preview, download) ----

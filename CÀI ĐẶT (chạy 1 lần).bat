@@ -75,8 +75,8 @@ REM ================= 4) WHISPER + YT-DLP (pip) =================
 echo.
 echo   --- [4/5] Whisper (gõ chữ) + yt-dlp ---
 python -m pip install --upgrade pip >nul 2>&1
-echo   Đang cài faster-whisper + yt-dlp (có thể mất vài phút)...
-python -m pip install --upgrade faster-whisper yt-dlp
+echo   Đang cài faster-whisper + yt-dlp + edge-tts (giọng AI) (có thể mất vài phút)...
+python -m pip install --upgrade faster-whisper yt-dlp edge-tts
 echo   Đang cài thư viện tăng tốc GPU (bỏ qua nếu máy không có card NVIDIA)...
 python -m pip install --upgrade nvidia-cublas-cu12 nvidia-cudnn-cu12 >nul 2>&1
 

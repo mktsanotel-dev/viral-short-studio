@@ -29,5 +29,18 @@ File mới: `lib/interior.mjs` · route `/api/interior` trong `server.mjs` · gi
 - Hàm mới `voicePitchTempo` trong `lib/effects.mjs` (dùng `rubberband`).
 - Chỉnh **cao độ** (−12…+12 nửa cung), **tông** (Bình thường/Trầm ấm/Trong trẻo/Trẻ em/Rất trầm), **tốc độ**, **khử tạp âm**.
 
+## 5. 🔊 Văn bản → Giọng AI (TTS) — có ở MỌI phần cần voice
+File mới: `lib/tts.mjs` · route `/api/tts` + `/api/tts/voices` trong `server.mjs`.
+- Dùng **edge-tts** (giọng neural của Microsoft): **miễn phí, KHÔNG cần API key**, cần internet.
+- Giọng tiếng Việt tự nhiên: **Hoài My** (nữ) · **Nam Minh** (nam); kèm 2 giọng tiếng Anh.
+- Chỉnh **tốc độ** (−40…+60%) và **cao độ** (−30…+30Hz).
+- Không có voice? Gõ/dán văn bản → AI đọc thành file giọng, dùng dựng video ngay.
+- Có mặt ở:
+  - 🎙️ **Short lồng voice** — tự điền vào ô giọng đọc.
+  - 🛋️ **Nội thất cho con** — tự điền vào ô giọng.
+  - 🔊 **Tab "Giọng AI"** (mới, độc lập) — tạo file giọng + copy đường dẫn dùng cho **tab bất kỳ**.
+- Bộ cài (`CÀI ĐẶT (chạy 1 lần).bat` và bản Mac) đã thêm `edge-tts`.
+- `server.mjs`: bổ sung MIME audio (mp3/wav/m4a/ogg/webm) để nghe thử ngay trong app.
+
 ## Bảo mật
 - `.env`, `settings.local.json`, thư mục `work/`, và media trong `Tài nguyên/` KHÔNG được đưa lên (theo `.gitignore`).

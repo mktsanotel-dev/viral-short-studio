@@ -21,6 +21,7 @@
   <button class="tab" data-tab="long">🎬 Video dài YouTube</button>
   <button class="tab" data-tab="voice">🎙️ Short lồng voice</button>
   <button class="tab" data-tab="interior">🛋️ Nội thất cho con</button>
+  <button class="tab" data-tab="tts">🔊 Giọng AI</button>
   <button class="tab" data-tab="eval">⭐ Đánh giá</button>
   <button class="tab" data-tab="edit">✂️ Tự biên tập</button>
   <button class="tab" data-tab="extract">🔎 Bóc ý tưởng</button>
@@ -312,8 +313,9 @@
       <div class="optgroup">
         <div class="optgroup-h">🎙️ Giọng đọc (voice-over) — bắt buộc</div>
         <label><label class="link">chọn file giọng đọc<input type="file" accept="audio/*" hidden id="file-voice"></label>
-          <input class="pathbox sm wide" id="voice-audio" placeholder="H:\\...\\giong-doc.mp3 (mp3/wav/m4a)" />
+          <input class="pathbox sm wide" id="voice-audio" placeholder="H:\\...\\giong-doc.mp3 (mp3/wav/m4a) — hoặc tạo giọng AI bên dưới" />
         </label>
+        <div id="voice-tts-mount"></div>
         <label>🔊 Âm lượng giọng <b id="voice-vvval">100</b>%<input type="range" id="voice-vv" min="30" max="150" value="100"></label>
       </div>
       <div class="optgroup">
@@ -391,7 +393,8 @@
           <label class="link">hoặc chọn file giọng<input type="file" accept="audio/*,video/*" hidden id="int-voicefile"></label>
         </div>
         <audio id="int-voice-preview" controls style="width:100%;display:none;margin-top:6px"></audio>
-        <input class="pathbox sm wide" id="int-voice" placeholder="đường dẫn file giọng (tự điền sau khi ghi/chọn)" />
+        <div id="int-tts-mount"></div>
+        <input class="pathbox sm wide" id="int-voice" placeholder="đường dẫn file giọng (tự điền sau khi ghi/chọn/tạo giọng AI)" />
         <label>Khi có giọng riêng:
           <select id="int-voicemode">
             <option value="replace">Thay hẳn tiếng gốc</option>
@@ -493,6 +496,18 @@
       <button class="go big" id="btn-interior">🛋️ Dựng video nội thất cho con →</button>
     </div>
     <div id="interior-out"></div>
+  </section>
+
+  <!-- 🔊 GIỌNG AI (dùng chung) -->
+  <section id="tab-tts" class="panel">
+    <div class="hero-note">
+      <b>Không có voice? Gõ văn bản → AI đọc thành giọng.</b> Tạo file giọng ở đây rồi
+      <b>dùng cho bất kỳ tab nào</b> (dán đường dẫn vào ô giọng). Giọng tiếng Việt tự nhiên,
+      <b>miễn phí, không cần API key</b> — chỉ cần internet.
+      <br><span class="muted" style="font-size:12px">Các tab 🎙️ Short lồng voice và 🛋️ Nội thất cho con đã có sẵn khối tạo giọng AI ngay trong tab.</span>
+    </div>
+    <div id="tts-mount"></div>
+    <div id="tts-out"></div>
   </section>
 
   <!-- ĐÁNH GIÁ -->

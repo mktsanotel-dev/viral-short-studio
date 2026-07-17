@@ -49,9 +49,9 @@ echo "  --- [3/6] Môi trường Python riêng (.venv) ---"
 if [ ! -d "$DIR/.venv" ]; then
   python3 -m venv "$DIR/.venv"
 fi
-echo "  [ ] Cài faster-whisper + yt-dlp (có thể mất vài phút)..."
+echo "  [ ] Cài faster-whisper + yt-dlp + edge-tts (giọng AI) (có thể mất vài phút)..."
 "$DIR/.venv/bin/python" -m pip install --upgrade pip >/dev/null 2>&1
-"$DIR/.venv/bin/python" -m pip install --upgrade faster-whisper yt-dlp
+"$DIR/.venv/bin/python" -m pip install --upgrade faster-whisper yt-dlp edge-tts
 
 # ---------- 4) Claude CLI ----------
 echo ""

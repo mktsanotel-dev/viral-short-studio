@@ -1507,6 +1507,80 @@ wireUpload("file-acmusic", "ac-music");
   }).catch(() => {});
 })();
 
+// ================= 🔊 VĂN BẢN → GIỌNG AI (dùng chung cho MỌI tab cần voice) =================
+// Gõ/dán văn bản → tạo giọng AI (edge-tts, miễn phí) → tự điền vào ô voice của tab đó.
+// onVoice(path) được gọi sau khi tạo xong; nghe thử ngay tại chỗ.
+let TTS_VOICE_LIST = [
+  { id: "vi-VN-HoaiMyNeural", label: "🇻🇳 Hoài My (nữ)" },
+  { id: "vi-VN-NamMinhNeural", label: "🇻🇳 Nam Minh (nam)" },
+];
+fetch("/api/tts/voices").then((r) => r.json()).then((j) => { if (j.voices && j.voices.length) TTS_VOICE_LIST = j.voices; }).catch(() => {});
+
+function makeTtsBox(onVoice, { placeholder = "Dán kịch bản/lời thoại ở đây → bấm Tạo giọng AI" } = {}) {
+  const box = document.createElement("div");
+  box.className = "ttsbox";
+  box.innerHTML = `
+    <div class="tts-h">🔊 <b>Không có voice? Gõ văn bản → Giọng AI đọc</b>
+      <span class="muted" style="font-weight:400"> (miễn phí · cần internet)</span></div>
+    <textarea class="tts-text pathbox" rows="3" placeholder="${placeholder}"></textarea>
+    <div class="tts-row">
+      <label>Giọng: <select class="tts-voice"></select></label>
+      <label>Tốc độ <b class="tts-ratelab">0</b>%
+        <input type="range" class="tts-rate" min="-40" max="60" value="0" style="width:110px">
+      </label>
+      <label>Cao độ <b class="tts-pitchlab">0</b>Hz
+        <input type="range" class="tts-pitch" min="-30" max="30" value="0" style="width:110px">
+      </label>
+      <button class="dl tts-go">🔊 Tạo giọng AI</button>
+      <span class="tts-status muted"></span>
+    </div>
+    <audio class="tts-prev" controls style="width:100%;display:none;margin-top:6px"></audio>`;
+
+  const sel = box.querySelector(".tts-voice");
+  const fill = () => { sel.innerHTML = TTS_VOICE_LIST.map((v) => `<option value="${v.id}">${v.label}</option>`).join(""); };
+  fill();
+  // nạp lại khi danh sách giọng về sau
+  setTimeout(fill, 1200);
+
+  const rate = box.querySelector(".tts-rate"), pitch = box.querySelector(".tts-pitch");
+  rate.addEventListener("input", () => { box.querySelector(".tts-ratelab").textContent = rate.value; });
+  pitch.addEventListener("input", () => { box.querySelector(".tts-pitchlab").textContent = pitch.value; });
+
+  box.querySelector(".tts-go").addEventListener("click", async () => {
+    const text = box.querySelector(".tts-text").value.trim();
+    const status = box.querySelector(".tts-status");
+    if (!text) return alert("Chị gõ/dán văn bản cần đọc trước nhé.");
+    const btn = box.querySelector(".tts-go");
+    btn.disabled = true; status.textContent = "⏳ đang tạo giọng AI…";
+    try {
+      const r = await fetch("/api/tts", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice: sel.value, rate: +rate.value, pitch: +pitch.value }),
+      }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      await new Promise((resolve, reject) => pollJob(r.jobId, (j) => {
+        if (j.status === "error") return reject(new Error(j.error));
+        const res = j.result;
+        const a = box.querySelector(".tts-prev");
+        a.src = "/api/file?path=" + encodeURIComponent(res.path) + "&t=" + Date.now();
+        a.style.display = "block";
+        status.textContent = `✔ xong (${(res.duration || 0).toFixed(1)}s) — đã điền vào ô giọng`;
+        onVoice(res.path, res);
+        resolve();
+      }));
+    } catch (err) { status.textContent = "❌ " + err.message; alert(err.message); }
+    finally { btn.disabled = false; }
+  });
+  return box;
+}
+
+// Gắn khối TTS vào 1 vùng theo id.
+function injectTts(hostId, onVoice, opts) {
+  const host = document.getElementById(hostId);
+  if (!host) return;
+  host.appendChild(makeTtsBox(onVoice, opts));
+}
+
 // ================= 🛋️ NỘI THẤT CHO CON =================
 let intVideoPath = null, intVoicePath = null, intLastResult = null;
 
@@ -1637,6 +1711,43 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
       await run({ editedSegments: lines });
     });
   }
+})();
+
+// ================= 🔊 GẮN KHỐI "VĂN BẢN → GIỌNG AI" VÀO MỌI TAB CẦN VOICE =================
+(function wireTtsEverywhere() {
+  // 🛋️ Nội thất cho con → điền thẳng vào ô giọng của tab.
+  injectTts("int-tts-mount", (p) => {
+    intVoicePath = p;
+    const el = $("#int-voice"); if (el) el.value = p;
+    const st = $("#int-rec-status"); if (st) st.textContent = "✔ đang dùng giọng AI";
+  }, { placeholder: "VD: Nội thất cho con mang lại không gian ấm áp và an toàn cho bé…" });
+
+  // 🎙️ Short lồng voice → điền vào ô giọng đọc (bắt buộc của tab này).
+  injectTts("voice-tts-mount", (p) => {
+    const el = $("#voice-audio"); if (el) el.value = p;
+  }, { placeholder: "Dán kịch bản kể chuyện → AI đọc thành voice-over…" });
+
+  // 🔊 Tab Giọng AI độc lập → hiện đường dẫn để chị copy dùng cho tab bất kỳ.
+  injectTts("tts-mount", (p, res) => {
+    $("#tts-out").innerHTML = `
+      <div class="pub-box">
+        <div class="pub-title">✅ Đã tạo giọng AI (${(res.duration || 0).toFixed(1)}s)</div>
+        <div class="muted" style="font-size:12px;margin:4px 0">Copy đường dẫn này dán vào ô giọng của tab bất kỳ:</div>
+        <input class="pathbox sm wide" id="tts-path" readonly value="${p.replace(/"/g, "&quot;")}">
+        <div style="margin-top:6px">
+          <button class="dl" id="tts-copy">📋 Copy đường dẫn</button>
+          <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(p)}" download>⬇ Tải file giọng</a>
+        </div>
+      </div>`;
+    const cp = $("#tts-copy");
+    if (cp) cp.addEventListener("click", () => {
+      const inp = $("#tts-path"); inp.select();
+      navigator.clipboard.writeText(inp.value).then(
+        () => { cp.textContent = "✔ Đã copy"; setTimeout(() => (cp.textContent = "📋 Copy đường dẫn"), 1500); },
+        () => { document.execCommand("copy"); }
+      );
+    });
+  }, { placeholder: "Gõ/dán văn bản bất kỳ → AI đọc thành file giọng dùng cho mọi tab…" });
 })();
 
 // ================= 📁🗂️ GẮN THANH TẢI LÊN (file lẻ + cả thư mục) VÀO MỌI TAB =================

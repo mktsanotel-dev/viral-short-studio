@@ -82,6 +82,17 @@ main{padding:20px 22px 60px;max-width:1000px;margin:0 auto}
 #int-rec.recording{background:var(--acc);color:#fff;border-color:var(--acc);animation:recpulse 1s infinite}
 @keyframes recpulse{0%,100%{opacity:1}50%{opacity:.6}}
 
+/* 🔊 Khối "Văn bản → Giọng AI" (dùng chung mọi tab cần voice) */
+.ttsbox{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--acc);
+  border-radius:10px;padding:10px;margin:8px 0}
+.tts-h{font-size:12.5px;margin-bottom:6px}
+.tts-h b{color:var(--acc)}
+.ttsbox .tts-text{margin-top:0}
+.tts-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px;font-size:12px}
+.tts-row label{display:flex;align-items:center;gap:5px}
+.tts-row .dl{margin-top:0}
+.tts-status{font-size:12px}
+
 .beat{display:flex;gap:10px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--line)}
 .beat b{color:var(--acc);min-width:44px}
 
