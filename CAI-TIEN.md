@@ -32,7 +32,7 @@ File mới: `lib/interior.mjs` · route `/api/interior` trong `server.mjs` · gi
 ## 5. 🔊 Văn bản → Giọng AI (TTS) — có ở MỌI phần cần voice
 File mới: `lib/tts.mjs` · route `/api/tts` + `/api/tts/voices` trong `server.mjs`.
 - Dùng **edge-tts** (giọng neural của Microsoft): **miễn phí, KHÔNG cần API key**, cần internet.
-- Giọng tiếng Việt tự nhiên: **Hoài My** (nữ) · **Nam Minh** (nam); kèm 2 giọng tiếng Anh.
+- Giọng tiếng Việt tự nhiên: **Hoài My** (nữ) · **Nam Minh** (nam). CHỈ tiếng Việt.
 - Chỉnh **tốc độ** (−40…+60%) và **cao độ** (−30…+30Hz).
 - Không có voice? Gõ/dán văn bản → AI đọc thành file giọng, dùng dựng video ngay.
 - Có mặt ở:

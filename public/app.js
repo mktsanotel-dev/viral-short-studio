@@ -1511,8 +1511,8 @@ wireUpload("file-acmusic", "ac-music");
 // Gõ/dán văn bản → tạo giọng AI (edge-tts, miễn phí) → tự điền vào ô voice của tab đó.
 // onVoice(path) được gọi sau khi tạo xong; nghe thử ngay tại chỗ.
 let TTS_VOICE_LIST = [
-  { id: "vi-VN-HoaiMyNeural", label: "🇻🇳 Hoài My (nữ)" },
-  { id: "vi-VN-NamMinhNeural", label: "🇻🇳 Nam Minh (nam)" },
+  { id: "vi-VN-HoaiMyNeural", label: "Hoài My (nữ, thân thiện)" },
+  { id: "vi-VN-NamMinhNeural", label: "Nam Minh (nam, thân thiện)" },
 ];
 fetch("/api/tts/voices").then((r) => r.json()).then((j) => { if (j.voices && j.voices.length) TTS_VOICE_LIST = j.voices; }).catch(() => {});
 
