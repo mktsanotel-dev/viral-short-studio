@@ -312,6 +312,43 @@ function publishHtml(item) {
     </div>
   </div>`;
 }
+// ✍️ TRÌNH SỬA PHỤ ĐỀ DÙNG CHUNG — gắn vào MỌI thành phẩm (edit / long / voice / nội thất).
+// Phụ đề đã "nướng" vào video nên sửa = DỰNG LẠI từ nguồn với phụ đề mới (whisper có cache → nhanh).
+function subEditorBlock(segments) {
+  if (!segments || !segments.length)
+    return `<div class="muted" style="font-size:12px;margin-top:8px">ℹ️ Không có phụ đề để sửa (chưa bật phụ đề hoặc chưa nhận ra lời nói).</div>`;
+  const subText = segments.map((s) => s.text).join("\n");
+  return `
+    <div class="optgroup subedit-box" style="margin-top:12px;flex:1 1 100%">
+      <div class="optgroup-h">✍️ Sửa phụ đề rồi dựng lại (mỗi dòng = 1 câu; để trống dòng = ẩn câu đó)</div>
+      <textarea class="pathbox subedit-ta" rows="6" spellcheck="false">${esc(subText)}</textarea>
+      <button class="dl subedit-btn">🔁 Dựng lại (áp phụ đề đã sửa)</button>
+      <span class="muted subedit-status" style="font-size:12px;margin-left:8px"></span>
+    </div>`;
+}
+// host: phần tử chứa kết quả (đã render subEditorBlock). endpoint + body: như lần chạy đầu.
+// rerender(result): vẽ lại kết quả (phải tự gọi lại attachSubEditor trong đó).
+function attachSubEditor(host, { endpoint, body, rerender }) {
+  const btn = host.querySelector(".subedit-btn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const lines = host.querySelector(".subedit-ta").value.split("\n").map((s) => s.trim());
+    const st = host.querySelector(".subedit-status");
+    st.textContent = "⏳ đang dựng lại…"; btn.disabled = true;
+    try {
+      const nb = Object.assign({}, body, { editedSegments: lines });
+      const r = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nb) }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      await new Promise((res, rej) => pollJob(r.jobId, (j) => {
+        if (j.status === "error") return rej(new Error(j.error));
+        rerender(j.result); res();
+      }));
+    } catch (e) {
+      const st2 = host.querySelector(".subedit-status"); if (st2) st2.textContent = "❌ " + e.message; else alert(e.message);
+    }
+  });
+}
+
 // Bấm "Đăng Lark" (delegated — dùng cho MỌI tab). Đăng thủ công 1 video bất kỳ.
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".pub-larkbtn");
@@ -1057,6 +1094,7 @@ $("#btn-edit").addEventListener("click", async () => {
     ...publishBody("e"),
   };
   confirmLark("e"); body.postLark = $("#e-mklark") ? $("#e-mklark").checked : false;
+  editLastBody = body;
   const r = await fetch("/api/edit", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   }).then((r) => r.json());
@@ -1064,18 +1102,24 @@ $("#btn-edit").addEventListener("click", async () => {
   pollJob(r.jobId, (j) => {
     $("#btn-edit").disabled = false;
     if (j.status === "error") return alert(j.error);
-    const out = j.result.outPath;
-    const url = "/api/file?path=" + encodeURIComponent(out);
-    $("#edit-out").innerHTML = `
-      <div class="result-video">
-        <h3>✅ Bản viral đã xong (${j.result.meta.width}x${j.result.meta.height}, ${j.result.meta.duration.toFixed(0)}s)</h3>
-        <video src="${url}" controls></video><br>
-        <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải video</a>
-        <div class="muted" style="font-size:12px;margin-top:8px">${out}</div>
-        ${publishHtml(j.result)}
-      </div>`;
+    renderEditResult(j.result);
   });
 });
+let editLastBody = null;
+function renderEditResult(result) {
+  const out = result.outPath;
+  const url = "/api/file?path=" + encodeURIComponent(out) + "&t=" + Date.now();
+  $("#edit-out").innerHTML = `
+    <div class="result-video">
+      <h3>✅ Bản viral đã xong (${result.meta.width}x${result.meta.height}, ${result.meta.duration.toFixed(0)}s)</h3>
+      <video src="${url}" controls></video><br>
+      <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải video</a>
+      <div class="muted" style="font-size:12px;margin-top:8px">${out}</div>
+      ${subEditorBlock(result.segments)}
+      ${publishHtml(result)}
+    </div>`;
+  attachSubEditor($("#edit-out"), { endpoint: "/api/edit", body: editLastBody, rerender: renderEditResult });
+}
 
 // ================= BÓC Ý TƯỞNG =================
 $("#btn-extract").addEventListener("click", async () => {
@@ -1189,30 +1233,36 @@ async function runLong() {
     maxMinutes: parseInt($("#l-maxmin").value, 10) || 10,
   };
   confirmLark("l"); body.postLark = $("#l-mklark") ? $("#l-mklark").checked : false;
+  longLastBody = body;
   const r = await fetch("/api/longedit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
   if (r.error) { $("#btn-long").disabled = false; return alert(r.error); }
   pollJob(r.jobId, (j) => {
     $("#btn-long").disabled = false;
     if (j.status === "error") return alert(j.error);
-    const parts = (j.result && j.result.parts) || [];
-    const cards = parts.map((p, i) => {
-      const url = "/api/file?path=" + encodeURIComponent(p.outPath);
-      const thumb = p.thumbPath ? "/api/file?path=" + encodeURIComponent(p.thumbPath) : null;
-      return `<div class="clip-card" style="max-width:420px">
-        <video src="${url}" controls style="width:100%;aspect-ratio:${j.result.aspect === "1:1" ? "1/1" : "16/9"};background:#000"></video>
-        <div class="clip-body">
-          <div class="clip-top"><b>${parts.length > 1 ? "Phần " + (i + 1) : "Video dài"}</b> · ${p.meta.width}x${p.meta.height} · ${Math.round(p.meta.duration)}s</div>
-          <div class="clip-dls">
-            <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(p.outPath)}" download>⬇ Tải video</a>
-          </div>
-          ${publishHtml(p)}
-        </div></div>`;
-    }).join("");
-    $("#long-out").innerHTML = `<div class="scorecard"><h3>✅ Đã xong ${parts.length > 1 ? parts.length + " phần" : "video dài"} (${j.result.aspect})</h3>
-      <div class="clip-grid">${cards}</div></div>`;
+    renderLongResult(j.result);
   });
 }
 $("#btn-long").addEventListener("click", runLong);
+let longLastBody = null;
+function renderLongResult(result) {
+  const parts = (result && result.parts) || [];
+  const cards = parts.map((p, i) => {
+    const url = "/api/file?path=" + encodeURIComponent(p.outPath) + "&t=" + Date.now();
+    return `<div class="clip-card" style="max-width:420px">
+      <video src="${url}" controls style="width:100%;aspect-ratio:${result.aspect === "1:1" ? "1/1" : "16/9"};background:#000"></video>
+      <div class="clip-body">
+        <div class="clip-top"><b>${parts.length > 1 ? "Phần " + (i + 1) : "Video dài"}</b> · ${p.meta.width}x${p.meta.height} · ${Math.round(p.meta.duration)}s</div>
+        <div class="clip-dls">
+          <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(p.outPath)}" download>⬇ Tải video</a>
+        </div>
+        ${publishHtml(p)}
+      </div></div>`;
+  }).join("");
+  $("#long-out").innerHTML = `<div class="scorecard"><h3>✅ Đã xong ${parts.length > 1 ? parts.length + " phần" : "video dài"} (${result.aspect})</h3>
+    <div class="clip-grid">${cards}</div>
+    ${subEditorBlock(result.segments)}</div>`;
+  attachSubEditor($("#long-out"), { endpoint: "/api/longedit", body: longLastBody, rerender: renderLongResult });
+}
 wireUpload("file-lmusic", "l-music");
 wireUpload("file-lintro", "l-intro");
 wireUpload("file-loutro", "l-outro");
@@ -1277,20 +1327,27 @@ async function runVoice() {
     ...publishBody("voice"),
   };
   confirmLark("voice"); body.postLark = $("#voice-mklark") ? $("#voice-mklark").checked : false;
+  voiceLastBody = body;
   const r = await fetch("/api/voiceshort", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
   if (r.error) { $("#btn-voice").disabled = false; return alert(r.error); }
   pollJob(r.jobId, (j) => {
     $("#btn-voice").disabled = false;
     if (j.status === "error") return alert(j.error);
-    const out = j.result.outPath, url = "/api/file?path=" + encodeURIComponent(out);
-    $("#voice-out").innerHTML = `<div class="result-video"><h3>✅ Short lồng voice đã xong (${j.result.meta.width}x${j.result.meta.height}, ${Math.round(j.result.meta.duration)}s)</h3>
-      <video src="${url}" controls style="max-width:300px;width:100%"></video><br>
-      <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải video</a>
-      <div class="muted" style="font-size:12px;margin-top:8px">${out}</div>
-      ${publishHtml(j.result)}</div>`;
+    renderVoiceResult(j.result);
   });
 }
 $("#btn-voice").addEventListener("click", runVoice);
+let voiceLastBody = null;
+function renderVoiceResult(result) {
+  const out = result.outPath, url = "/api/file?path=" + encodeURIComponent(out) + "&t=" + Date.now();
+  $("#voice-out").innerHTML = `<div class="result-video"><h3>✅ Short lồng voice đã xong (${result.meta.width}x${result.meta.height}, ${Math.round(result.meta.duration)}s)</h3>
+    <video src="${url}" controls style="max-width:300px;width:100%"></video><br>
+    <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải video</a>
+    <div class="muted" style="font-size:12px;margin-top:8px">${out}</div>
+    ${subEditorBlock(result.segments)}
+    ${publishHtml(result)}</div>`;
+  attachSubEditor($("#voice-out"), { endpoint: "/api/voiceshort", body: voiceLastBody, rerender: renderVoiceResult });
+}
 
 // ================= 💾 LƯU / MỞ LẠI PROJECT (2 mode mới) =================
 // Nhớ thiết lập + đường dẫn input để chỉnh lại KHÔNG phải nhập lại; kèm nút "Dựng lại (giữ phân tích)".

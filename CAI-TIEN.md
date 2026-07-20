@@ -47,5 +47,14 @@ File mới: `lib/tts.mjs` · route `/api/tts` + `/api/tts/voices` trong `server.
 - Bộ cài (`CÀI ĐẶT (chạy 1 lần).bat` và bản Mac) đã thêm `edge-tts`.
 - `server.mjs`: bổ sung MIME audio (mp3/wav/m4a/ogg/webm) để nghe thử ngay trong app.
 
+## 6. Sửa phụ đề trên MỌI thành phẩm (mới)
+Trước đây chỉ tab Cắt tự động & Nội thất sửa được phụ đề. Nay **mọi tab làm video** đều có
+ô **"✍️ Sửa phụ đề rồi dựng lại"** ngay dưới video: Tự biên tập, Video dài, Short lồng voice.
+- Hàm dùng chung `applyEditedText` + `transcriptSegments` trong `lib/transcribe.mjs`.
+- Mỗi pipeline (`edit.mjs`, `longedit.mjs`, `voiceshort.mjs`, `interior.mjs`) nhận `editedSegments`,
+  áp phụ đề đã sửa rồi burn lại; trả về `segments` cho giao diện.
+- Sửa chữ Whisper đọc sai → bấm dựng lại (whisper có cache nên nhanh, không tốn token).
+- Giao diện: `subEditorBlock` + `attachSubEditor` trong `public/app.js` (dùng chung mọi tab).
+
 ## Bảo mật
 - `.env`, `settings.local.json`, thư mục `work/`, và media trong `Tài nguyên/` KHÔNG được đưa lên (theo `.gitignore`).
