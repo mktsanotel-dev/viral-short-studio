@@ -177,13 +177,25 @@ const server = http.createServer(async (req, res) => {
       const buf = await readBody(req);
       let baseDir = UP;
       const sub = decodeURIComponent(req.headers["x-subdir"] || "").trim();
+      let dest;
       if (sub) {
+        // Tải cả thư mục (vd b-roll): GIỮ NGUYÊN tên file gốc để khớp từ khóa theo tên.
         const safeSub = slug(sub) || "folder";
         baseDir = path.join(UP, safeSub);
         fs.mkdirSync(baseDir, { recursive: true });
+        const clean = path.basename(name).replace(/[\\/:*?"<>|]/g, "_") || "file";
+        dest = path.join(baseDir, clean);
+        // tránh ghi đè nếu trùng tên: thêm hậu tố -2, -3…
+        if (fs.existsSync(dest)) {
+          const ext = path.extname(clean), stem = clean.slice(0, clean.length - ext.length);
+          let n = 2; while (fs.existsSync(path.join(baseDir, `${stem}-${n}${ext}`))) n++;
+          dest = path.join(baseDir, `${stem}-${n}${ext}`);
+        }
+      } else {
+        // Tải file lẻ: thêm tiền tố thời gian để không đụng tên.
+        const safe = `${Date.now()}-${slug(name.replace(/\.[^.]+$/, ""))}${path.extname(name) || ".mp4"}`;
+        dest = path.join(UP, safe);
       }
-      const safe = `${Date.now()}-${slug(name.replace(/\.[^.]+$/, ""))}${path.extname(name) || ".mp4"}`;
-      const dest = path.join(baseDir, safe);
       fs.writeFileSync(dest, buf);
       return send(res, 200, { ok: true, path: dest, name, dir: baseDir });
     }

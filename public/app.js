@@ -120,6 +120,38 @@ function injectUploader(hostId, onPaths, opts) {
   host.appendChild(makeUploadBar(onPaths, opts));
 }
 
+// 🗂️ Gắn nút "Chọn thư mục" ngay cạnh 1 ô nhập đường dẫn THƯ MỤC (vd b-roll, ảnh chân dung).
+// Tải cả thư mục lên (giữ nguyên tên file — để b-roll khớp từ khóa) rồi điền đường dẫn thư mục.
+function attachFolderPicker(inputId, { label = "🗂️ Chọn thư mục" } = {}) {
+  const input = document.getElementById(inputId);
+  if (!input || input.dataset.folderpick) return;
+  input.dataset.folderpick = "1";
+  const btn = document.createElement("label");
+  btn.className = "upbtn folderpick";
+  btn.style.cssText = "margin-top:6px;font-size:12px;padding:6px 12px";
+  btn.innerHTML = `${label}<input type="file" webkitdirectory directory multiple hidden></input>`;
+  const status = document.createElement("span");
+  status.className = "muted";
+  status.style.cssText = "font-size:11px;margin-left:8px";
+  const fi = btn.querySelector("input");
+  fi.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const rp = files[0].webkitRelativePath || "";
+    const subdir = (rp.split("/")[0] || ("thu-muc-" + Date.now()));
+    let dir = null, done = 0;
+    for (const f of files) {
+      status.textContent = `⏳ tải ${++done}/${files.length}: ${f.name}`;
+      try { const r = await uploadFile(f, null, subdir); dir = r.dir; }
+      catch (err) { status.textContent = "❌ " + err.message; return; }
+    }
+    if (dir) input.value = dir;
+    status.textContent = `✔ đã tải ${files.length} file (thư mục: ${subdir})`;
+  });
+  input.insertAdjacentElement("afterend", status);
+  input.insertAdjacentElement("afterend", btn);
+}
+
 // ---- Drag & drop wiring ----
 function wireDrop(zoneId, fileInputId, pathInputId, onFile) {
   const dz = $("#" + zoneId);
@@ -1941,4 +1973,10 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
   injectUploader("dz-batch", (paths, info) => {
     if (info && info.dir) $("#b-folder").value = info.dir;
   }, { multi: true, groupDir: true, label: "video vào thư mục" });
+
+  // 🗂️ Nút "Chọn thư mục" cho MỌI ô nhập đường dẫn THƯ MỤC (b-roll, ảnh chân dung).
+  [
+    "ac-broll", "l-broll", "voice-broll", "e-broll",           // thư mục b-roll (trám cảnh)
+    "ac-thumbdir", "l-thumbdir", "cfg-brand-thumbdir",          // thư mục ảnh chân dung (thumbnail)
+  ].forEach((id) => attachFolderPicker(id));
 })();
