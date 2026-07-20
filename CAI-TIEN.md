@@ -56,5 +56,14 @@ Trước đây chỉ tab Cắt tự động & Nội thất sửa được phụ 
 - Sửa chữ Whisper đọc sai → bấm dựng lại (whisper có cache nên nhanh, không tốn token).
 - Giao diện: `subEditorBlock` + `attachSubEditor` trong `public/app.js` (dùng chung mọi tab).
 
+## 7. Tab "✍️ Sửa phụ đề" — cho video thành phẩm bất kỳ (mới)
+File mới `lib/resub.mjs` · route `/api/resub/detect` + `/api/resub` · giao diện trong index.html + app.js.
+- Thả BẤT KỲ video nào (kể cả video cũ) → bấm **Nhận diện lời** → sửa chữ → **Dựng lại**.
+- Video **chưa có phụ đề**: thêm phụ đề mới (Roboto) sạch đẹp.
+- Video **đã in phụ đề sai**: bật **"che vùng chữ cũ"** (làm mờ hoặc hộp tối) rồi in chữ mới đè lên
+  — vì chữ đã "nướng chết" không xoá được, che là cách sạch nhất.
+- Chọn vị trí phụ đề, kiểu phụ đề, vị trí & độ cao dải che.
+- Đã test end-to-end: TTS → video → nhận diện → sửa chữ → che mờ + in Roboto → xuất OK.
+
 ## Bảo mật
 - `.env`, `settings.local.json`, thư mục `work/`, và media trong `Tài nguyên/` KHÔNG được đưa lên (theo `.gitignore`).

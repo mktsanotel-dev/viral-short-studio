@@ -17,6 +17,7 @@ import { postToLark, parseBaseUrl, probeBase, larkStatus } from "./lib/larkpost.
 import { longEdit } from "./lib/longedit.mjs";
 import { voiceShort } from "./lib/voiceshort.mjs";
 import { interiorEdit } from "./lib/interior.mjs";
+import { detectSubs, resubVideo } from "./lib/resub.mjs";
 import { textToSpeech, TTS_VOICES } from "./lib/tts.mjs";
 import { runStandard } from "./lib/standard.mjs";
 import { BRAND, DEFAULTS, PRESETS, applyBrandSettings } from "./lib/presets.mjs";
@@ -356,6 +357,41 @@ const server = http.createServer(async (req, res) => {
         const pub = await publishOutputs([{ outPath: r.outPath, title: body.hookText || "", transcriptText: r.transcriptText }], { ...publishOpts(body, "Video"), onLog });
         return { ...r, ...pub[0], clips: pub };
       });
+      return send(res, 200, { jobId: job.id });
+    }
+
+    // ---- ✍️ SỬA PHỤ ĐỀ (bước 1: nhận diện lời → trả câu để sửa) ----
+    if (req.method === "POST" && p === "/api/resub/detect") {
+      const body = await readJSONBody(req);
+      const file = body.path;
+      if (!file || !fs.existsSync(file)) return send(res, 400, { error: "thiếu/không thấy video" });
+      const job = newJob("resub-detect");
+      runJob(job, async (onLog) => detectSubs(file, {
+        model: body.model || DEFAULTS.model, lang: body.lang || DEFAULTS.lang, onLog,
+      }));
+      return send(res, 200, { jobId: job.id });
+    }
+
+    // ---- ✍️ SỬA PHỤ ĐỀ (bước 2: dựng video với phụ đề đã sửa, tuỳ chọn che chữ cũ) ----
+    if (req.method === "POST" && p === "/api/resub") {
+      const body = await readJSONBody(req);
+      const file = body.path;
+      if (!file || !fs.existsSync(file)) return send(res, 400, { error: "thiếu/không thấy video" });
+      const job = newJob("resub");
+      const base = slug(path.basename(file).replace(/\.[^.]+$/, "")) || "video";
+      const outPath = path.join(OUT, `subfix-${base}-${Date.now()}.mp4`);
+      runJob(job, async (onLog) => resubVideo(file, {
+        onLog, id: job.id, outPath,
+        editedSegments: body.editedSegments || null,
+        captionStyle: body.captionStyle || "karaoke",
+        captionPos: body.captionPos || "bottom",
+        coverOld: !!body.coverOld,
+        coverPos: body.coverPos || "bottom",
+        coverFrac: body.coverFrac ?? 0.16,
+        coverMode: body.coverMode || "blur",
+        model: body.model || DEFAULTS.model,
+        lang: body.lang || DEFAULTS.lang,
+      }));
       return send(res, 200, { jobId: job.id });
     }
 

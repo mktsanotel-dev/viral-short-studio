@@ -1822,6 +1822,69 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
   }, { placeholder: "Gõ/dán văn bản bất kỳ → AI đọc thành file giọng dùng cho mọi tab…" });
 })();
 
+// ================= ✍️ SỬA PHỤ ĐỀ (video thành phẩm bất kỳ) =================
+(function wireResub() {
+  if (!$("#rs-detect")) return;
+  const fr = $("#rs-coverfrac");
+  if (fr) fr.addEventListener("input", () => { $("#rs-coverfracval").textContent = fr.value; });
+
+  // ① Nhận diện lời → điền phụ đề để sửa
+  $("#rs-detect").addEventListener("click", async () => {
+    const file = $("#rs-path").value.trim();
+    if (!file) return alert("Chọn/kéo-thả video hoặc dán đường dẫn.");
+    const st = $("#rs-detect-status");
+    $("#rs-detect").disabled = true; st.textContent = "⏳ đang nghe & nhận diện lời (lần đầu hơi lâu)…";
+    try {
+      const r = await fetch("/api/resub/detect", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: file }) }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      await new Promise((res, rej) => pollJob(r.jobId, (j) => {
+        if (j.status === "error") return rej(new Error(j.error));
+        const segs = (j.result && j.result.segments) || [];
+        if (!segs.length) { st.textContent = "⚠ không nhận ra lời nói (video không có tiếng?)."; return res(); }
+        $("#rs-sub").value = segs.map((s) => s.text).join("\n");
+        $("#rs-editor").style.display = "block";
+        st.textContent = `✔ đã nhận ${segs.length} câu — sửa rồi bấm ② Dựng lại`;
+        $("#rs-editor").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        res();
+      }));
+    } catch (e) { st.textContent = "❌ " + e.message; alert(e.message); }
+    finally { $("#rs-detect").disabled = false; }
+  });
+
+  // ② Dựng video với phụ đề đã sửa
+  $("#rs-render").addEventListener("click", async () => {
+    const file = $("#rs-path").value.trim();
+    if (!file) return alert("Chưa có video.");
+    const body = {
+      path: file,
+      editedSegments: $("#rs-sub").value.split("\n").map((s) => s.trim()),
+      captionStyle: $("#rs-capstyle").value,
+      captionPos: $("#rs-cappos").value,
+      coverOld: $("#rs-cover").checked,
+      coverPos: $("#rs-coverpos").value,
+      coverMode: $("#rs-covermode").value,
+      coverFrac: (parseInt($("#rs-coverfrac").value, 10) || 16) / 100,
+    };
+    $("#rs-render").disabled = true; $("#resub-out").innerHTML = "";
+    try {
+      const r = await fetch("/api/resub", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      await new Promise((res, rej) => pollJob(r.jobId, (j) => {
+        if (j.status === "error") return rej(new Error(j.error));
+        const out = j.result.outPath, url = "/api/file?path=" + encodeURIComponent(out) + "&t=" + Date.now();
+        $("#resub-out").innerHTML = `<div class="result-video">
+          <h3>✅ Đã sửa phụ đề xong (${j.result.meta.width}x${j.result.meta.height}, ${Math.round(j.result.meta.duration)}s)</h3>
+          <video src="${url}" controls style="max-width:340px;width:100%"></video><br>
+          <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải video</a>
+          <div class="muted" style="font-size:11px;margin-top:6px">Sửa tiếp phụ đề ở ô trên rồi bấm ② để dựng lại.</div>
+        </div>`;
+        res();
+      }));
+    } catch (e) { alert(e.message); }
+    finally { $("#rs-render").disabled = false; }
+  });
+})();
+
 // ================= 📁🗂️ GẮN THANH TẢI LÊN (file lẻ + cả thư mục) VÀO MỌI TAB =================
 // Mọi chỗ cần video giờ có CẢ HAI: dán đường dẫn/link (sẵn có) VÀ tải từ máy (file + thư mục).
 (function wireUploadersEverywhere() {
@@ -1848,6 +1911,12 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
   injectUploader("dz-interior", (paths) => {
     if (!paths.length) return;
     intVideoPath = paths[0]; $("#int-path").value = paths[0];
+  }, { multi: false });
+
+  // ✍️ Sửa phụ đề — 1 video thành phẩm.
+  injectUploader("dz-resub", (paths) => {
+    if (!paths.length) return;
+    $("#rs-path").value = paths[0];
   }, { multi: false });
 
   // ⭐ Đánh giá — 1 video.

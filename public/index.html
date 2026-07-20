@@ -22,6 +22,7 @@
   <button class="tab" data-tab="voice">🎙️ Short lồng voice</button>
   <button class="tab" data-tab="interior">🛋️ Nội thất cho con</button>
   <button class="tab" data-tab="tts">🔊 Giọng AI</button>
+  <button class="tab" data-tab="resub">✍️ Sửa phụ đề</button>
   <button class="tab" data-tab="eval">⭐ Đánh giá</button>
   <button class="tab" data-tab="edit">✂️ Tự biên tập</button>
   <button class="tab" data-tab="extract">🔎 Bóc ý tưởng</button>
@@ -508,6 +509,61 @@
     </div>
     <div id="tts-mount"></div>
     <div id="tts-out"></div>
+  </section>
+
+  <!-- ✍️ SỬA PHỤ ĐỀ (video thành phẩm bất kỳ) -->
+  <section id="tab-resub" class="panel">
+    <div class="hero-note">
+      <b>Sửa phụ đề trên video thành phẩm bất kỳ.</b> Thả video vào → bấm <b>Nhận diện lời</b> →
+      sửa chữ sai → <b>Dựng lại</b>. Video <b>chưa có phụ đề</b> thì thêm mới; video <b>đã in phụ đề sai</b>
+      thì bật "che chữ cũ" để in đè chữ đúng lên trên.
+    </div>
+
+    <div class="dropzone" id="dz-resub">
+      <p>Kéo–thả VIDEO THÀNH PHẨM, hoặc dán đường dẫn</p>
+      <input class="pathbox" id="rs-path" placeholder="H:\\...\\video-thanh-pham.mp4" />
+    </div>
+
+    <div class="row">
+      <button class="go" id="rs-detect">🔎 ① Nhận diện lời nói (tạo phụ đề để sửa)</button>
+      <span class="muted" id="rs-detect-status" style="font-size:12px;margin-left:8px"></span>
+    </div>
+
+    <div id="rs-editor" style="display:none">
+      <div class="opts">
+        <div class="optgroup" style="flex:1 1 100%">
+          <div class="optgroup-h">✍️ Phụ đề (mỗi dòng = 1 câu; sửa chữ sai; để trống dòng = ẩn câu)</div>
+          <textarea class="pathbox" id="rs-sub" rows="8" spellcheck="false"></textarea>
+        </div>
+        <div class="optgroup">
+          <div class="optgroup-h">🎨 Phụ đề mới</div>
+          <label>Kiểu phụ đề:
+            <select id="rs-capstyle"><option value="karaoke">Karaoke (nổi từng từ)</option><option value="popline">Pop từng cụm</option></select>
+          </label>
+          <label>Vị trí phụ đề:
+            <select id="rs-cappos"><option value="bottom">Dưới</option><option value="middle">Giữa</option><option value="top">Trên</option></select>
+          </label>
+        </div>
+        <div class="optgroup">
+          <div class="optgroup-h">🩹 Video ĐÃ có phụ đề in sẵn?</div>
+          <label><input type="checkbox" id="rs-cover"> Bật CHE vùng chữ cũ (in đè chữ mới lên)</label>
+          <label>Vị trí chữ cũ:
+            <select id="rs-coverpos"><option value="bottom">Dưới</option><option value="middle">Giữa</option><option value="top">Trên</option></select>
+          </label>
+          <label>Kiểu che:
+            <select id="rs-covermode"><option value="blur">Làm mờ (tự nhiên)</option><option value="box">Hộp tối</option></select>
+          </label>
+          <label>Độ cao dải che <b id="rs-coverfracval">16</b>%
+            <input type="range" id="rs-coverfrac" min="8" max="35" value="16" style="width:100%">
+          </label>
+          <span class="muted" style="font-size:11px">Lưu ý: chữ cũ đã "nướng chết" không xoá được — chỉ che đi rồi in chữ mới đè lên.</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="go big" id="rs-render">🎬 ② Dựng video với phụ đề đã sửa →</button>
+      </div>
+    </div>
+    <div id="resub-out"></div>
   </section>
 
   <!-- ĐÁNH GIÁ -->
