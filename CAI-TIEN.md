@@ -76,5 +76,16 @@ Dành cho kênh chỉ ghép giọng đọc + cảnh (không có mặt người n
 - Kèm: phụ đề Roboto + **sửa phụ đề**, từ khóa phóng to giữa màn, hook, logo, thumbnail/caption AI.
 - Đã test end-to-end (module + HTTP route): TTS→giọng sạch→montage→2 nhạc crossfade→chill→phụ đề→xuất OK.
 
+## 9. Thêm 8 KIỂU PHỤ ĐỀ đang hot (mới)
+`buildAssCaptions` (transcribe.mjs) nay hỗ trợ 10 kiểu (2 cũ + 8 hot), chọn ở MỌI tab có phụ đề:
+- **Karaoke** (tô sáng chạy từng từ) · **Pop cụm** (cũ)
+- **Hormozi** — chữ HOA, từ đang nói vàng/xanh + phóng to (hot nhất TikTok/Reels)
+- **Từng từ** — 1 từ TO nảy giữa màn
+- **Highlight bút dạ** — từ đang nói có ô nền màu
+- **Neon** phát sáng · **Đánh máy** (chữ hiện dần) · **Nảy 3D** (bóng đổ)
+- **Trượt lên** từng từ · **Cầu vồng** (mỗi từ 1 màu)
+- Danh mục dùng chung `CAPTION_STYLES`; giao diện tự điền vào mọi ô "Kiểu phụ đề".
+- Đã test: 10/10 kiểu render qua libass không lỗi.
+
 ## Bảo mật
 - `.env`, `settings.local.json`, thư mục `work/`, và media trong `Tài nguyên/` KHÔNG được đưa lên (theo `.gitignore`).

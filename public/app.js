@@ -152,6 +152,32 @@ function attachFolderPicker(inputId, { label = "🗂️ Chọn thư mục" } = {
   input.insertAdjacentElement("afterend", btn);
 }
 
+// ---- 🎬 KIỂU PHỤ ĐỀ đang hot (đồng bộ với backend CAPTION_STYLES) ----
+const CAPTION_STYLES = [
+  ["karaoke", "Karaoke — tô sáng chạy từng từ"],
+  ["hormozi", "Hormozi — từ đang nói vàng/xanh, chữ HOA"],
+  ["word", "Từng từ TO nảy giữa màn"],
+  ["box", "Highlight bút dạ (ô nền từ đang nói)"],
+  ["neon", "Neon phát sáng"],
+  ["type", "Đánh máy (chữ hiện dần)"],
+  ["bounce", "Nảy 3D (bóng đổ)"],
+  ["slide", "Trượt lên từng từ"],
+  ["rainbow", "Cầu vồng (mỗi từ 1 màu)"],
+  ["popline", "Pop cụm (đơn giản)"],
+];
+// Điền đủ 10 kiểu vào MỌI ô chọn kiểu phụ đề (id kết thúc bằng "capstyle" hoặc class tc-capstyle).
+function populateCaptionStyles(root = document) {
+  root.querySelectorAll('select[id$="capstyle"], select.tc-capstyle').forEach((sel) => {
+    if (sel.dataset.capfilled) return;
+    const cur = sel.value || "karaoke";
+    sel.innerHTML = CAPTION_STYLES.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+    sel.value = CAPTION_STYLES.some(([v]) => v === cur) ? cur : "karaoke";
+    sel.dataset.capfilled = "1";
+  });
+}
+populateCaptionStyles();
+setTimeout(populateCaptionStyles, 800);
+
 // ---- Drag & drop wiring ----
 function wireDrop(zoneId, fileInputId, pathInputId, onFile) {
   const dz = $("#" + zoneId);
@@ -674,6 +700,7 @@ function buildSourceTrim(card) {
 // ---- Lớp ✏️ TINH CHỈNH: timeline seek + trim + dựng lại 1 short ----
 function wireTinhChinh() {
   $$(".clip-card").forEach(wireTimeline);
+  populateCaptionStyles(); // điền đủ 10 kiểu phụ đề vào ô Tinh chỉnh vừa dựng
 
   // Trim đầu/cuối: nút ± đổi mốc nguồn (data-start/data-end), cập nhật nhãn + thời lượng.
   $$(".tcbtn").forEach((btn) => btn.addEventListener("click", () => {
