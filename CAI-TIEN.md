@@ -65,5 +65,16 @@ File mới `lib/resub.mjs` · route `/api/resub/detect` + `/api/resub` · giao d
 - Chọn vị trí phụ đề, kiểu phụ đề, vị trí & độ cao dải che.
 - Đã test end-to-end: TTS → video → nhận diện → sửa chữ → che mờ + in Roboto → xuất OK.
 
+## 8. Tab "🎬 Kênh cho thuê" — chỉ VOICE + CẢNH (mới)
+File mới `lib/rental.mjs` · route `/api/rental` · tab + giao diện trong app.
+Dành cho kênh chỉ ghép giọng đọc + cảnh (không có mặt người nói):
+- **Giọng**: ghi âm / chọn file / **văn bản → giọng AI** (12 giọng); lọc ồn (RNNoise),
+  bỏ "à ừ" + ngắt quãng, tốc độ **1 / 1.1 / 1.2**, đánh bóng, tăng âm lượng (dùng lại `cleanVoice`).
+- **Cảnh**: trám **nhiều cảnh khác nhau linh động** từ 1 thư mục (xoay vòng, crop khung 9:16/1:1/16:9).
+- **Màu**: `chillGrade` trong `effects.mjs` — "chill" + HSL sáng da màu cam (3 mức).
+- **Nhạc nền**: **phối nhiều đoạn** khác nhau trong 1 video (crossfade nối bài, lặp/cắt đúng độ dài, nhường giọng).
+- Kèm: phụ đề Roboto + **sửa phụ đề**, từ khóa phóng to giữa màn, hook, logo, thumbnail/caption AI.
+- Đã test end-to-end (module + HTTP route): TTS→giọng sạch→montage→2 nhạc crossfade→chill→phụ đề→xuất OK.
+
 ## Bảo mật
 - `.env`, `settings.local.json`, thư mục `work/`, và media trong `Tài nguyên/` KHÔNG được đưa lên (theo `.gitignore`).

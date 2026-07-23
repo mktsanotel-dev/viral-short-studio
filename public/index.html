@@ -20,12 +20,15 @@
   <button class="tab active" data-tab="autoclip">🧠 Cắt tự động</button>
   <button class="tab" data-tab="long">🎬 Video dài YouTube</button>
   <button class="tab" data-tab="voice">🎙️ Short lồng voice</button>
+  <button class="tab" data-tab="rental">🎬 Kênh cho thuê</button>
   <button class="tab" data-tab="interior">🛋️ Nội thất cho con</button>
   <button class="tab" data-tab="tts">🔊 Giọng AI</button>
+  <button class="tab" data-tab="voiceclean">🎚️ Làm sạch giọng</button>
   <button class="tab" data-tab="resub">✍️ Sửa phụ đề</button>
   <button class="tab" data-tab="eval">⭐ Đánh giá</button>
   <button class="tab" data-tab="edit">✂️ Tự biên tập</button>
   <button class="tab" data-tab="extract">🔎 Bóc ý tưởng</button>
+  <button class="tab" data-tab="remake">🔄 Remake video</button>
   <button class="tab" data-tab="batch">📦 Hàng loạt</button>
   <button class="tab" data-tab="config">⚙️ Cấu hình</button>
 </nav>
@@ -149,18 +152,19 @@
         </label>
         <label>Làm mịn video:
           <select id="ac-smooth">
-            <option value="off">Tắt</option><option value="low">Nhẹ</option>
-            <option value="medium" selected>Vừa</option><option value="high">Mạnh</option>
+            <option value="off" selected>Tắt</option><option value="low">Nhẹ</option>
+            <option value="medium">Vừa</option><option value="high">Mạnh</option>
           </select>
         </label>
         <label>🎙️ Giữ giọng, khử tạp âm:
           <select id="ac-voice">
-            <option value="off">Tắt</option><option value="low">Nhẹ</option>
-            <option value="medium">Vừa</option><option value="high">Mạnh</option>
+            <option value="studio" selected>🎚️ Studio (như thu phòng)</option>
+            <option value="high">Mạnh (triệt để)</option><option value="medium">Vừa (khử ồn AI)</option>
+            <option value="low">Nhẹ</option><option value="off">Tắt</option>
           </select>
         </label>
         <label><input type="checkbox" id="ac-hook"> Đắp chữ tiêu đề đầu video (tuỳ chọn)</label>
-        <label><input type="checkbox" id="ac-film" checked> Vignette nhẹ</label>
+        <label><input type="checkbox" id="ac-film"> Vignette nhẹ</label>
         <label><input type="checkbox" id="ac-prog" checked> Thanh tiến trình</label>
       </div>
     </div>
@@ -231,19 +235,23 @@
         <label><input type="checkbox" id="l-mkcontent" checked> ✍️ Tạo tiêu đề + caption đăng bài (AI)</label>
         <label><input type="checkbox" id="l-mklark"> 📤 Đăng Lark sau khi dựng <span class="muted" style="font-size:11px">(mặc định TẮT — sẽ hỏi)</span></label>
         <label>Thư mục ảnh: <input class="pathbox sm wide" id="l-thumbdir" placeholder="tự điền từ cấu hình khi mở app" /></label>
+        <label>🧍 Ảnh người (lấy người lên bìa):
+          <label class="link">chọn ảnh<input type="file" accept="image/*" hidden id="file-lthumbimg"></label>
+          <input class="pathbox sm wide" id="l-thumbimg" placeholder="H:\\...\\anh-nguoi.jpg — ưu tiên ảnh này; để trống = tự bốc từ thư mục ảnh" />
+        </label>
         <label>Tiêu đề trên bìa: <input class="pathbox sm wide" id="l-thumbtitle" placeholder="để trống = lấy tiêu đề trên" /></label>
         <label>Tên hiển thị: <input class="pathbox sm" id="l-thumbname" /></label>
       </div>
       <div class="optgroup">
         <div class="optgroup-h">🎨 Màu &amp; hiệu ứng</div>
         <label>Color grade:
-          <select id="l-color"><option value="medium">Điện ảnh (vừa)</option><option value="high">Đậm</option><option value="low">Nhẹ</option><option value="off">Tắt</option></select>
+          <select id="l-color"><option value="off" selected>Tắt (giữ màu gốc)</option><option value="low">Nhẹ</option><option value="medium">Điện ảnh (vừa)</option><option value="high">Đậm</option></select>
         </label>
         <label>Làm mịn:
           <select id="l-smooth"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
         </label>
         <label>🎙️ Giữ giọng, khử tạp âm:
-          <select id="l-voice"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+          <select id="l-voice"><option value="studio" selected>🎚️ Studio (như thu phòng)</option><option value="high">Mạnh (triệt để)</option><option value="medium">Vừa (khử ồn AI)</option><option value="low">Nhẹ</option><option value="off">Tắt</option></select>
         </label>
         <label><input type="checkbox" id="l-film"> Vignette + grain</label>
         <label><input type="checkbox" id="l-norm" checked> Chuẩn âm -14 LUFS</label>
@@ -334,7 +342,7 @@
       <div class="optgroup">
         <div class="optgroup-h">🎨 Hiệu ứng &amp; phụ đề</div>
         <label>Color grade:
-          <select id="voice-color"><option value="medium">Điện ảnh (vừa)</option><option value="high">Đậm</option><option value="low">Nhẹ</option><option value="off">Tắt</option></select>
+          <select id="voice-color"><option value="off" selected>Tắt (giữ màu gốc)</option><option value="low">Nhẹ</option><option value="medium">Điện ảnh (vừa)</option><option value="high">Đậm</option></select>
         </label>
         <label>Làm mịn:
           <select id="voice-smooth"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
@@ -343,7 +351,7 @@
         <label>Kiểu phụ đề:
           <select id="voice-capstyle"><option value="karaoke">Karaoke</option><option value="popline">Pop cụm</option></select>
         </label>
-        <label><input type="checkbox" id="voice-film" checked> Vignette + grain</label>
+        <label><input type="checkbox" id="voice-film"> Vignette + grain</label>
         <label><input type="checkbox" id="voice-prog"> Thanh tiến trình</label>
         <label>✍️ Hook chữ to đầu video: <input class="pathbox sm wide" id="voice-hook" placeholder="để trống nếu không dùng" /></label>
       </div>
@@ -368,6 +376,111 @@
       <button class="go big" id="btn-voice">🎙️ Dựng short lồng voice →</button>
     </div>
     <div id="voice-out"></div>
+  </section>
+
+  <!-- 🎬 KÊNH CHO THUÊ (chỉ voice + cảnh) -->
+  <section id="tab-rental" class="panel">
+    <div class="hero-note">
+      <b>Kênh cho thuê — chỉ cần VOICE + CẢNH.</b> Lồng giọng (ghi âm / file / văn bản → giọng AI),
+      trám <b>nhiều cảnh khác nhau linh động</b> từ 1 thư mục, lọc ồn + bỏ à ừ + tốc độ 1/1.1/1.2,
+      màu <b>chill da cam</b>, nhạc nền <b>phối nhiều đoạn</b>, phụ đề Roboto + từ khóa giữa màn.
+    </div>
+
+    <div class="opts">
+      <!-- ① GIỌNG -->
+      <div class="optgroup">
+        <div class="optgroup-h">① 🎙️ Giọng đọc (chọn 1 trong 3)</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <button class="dl" id="rt-rec">🔴 Ghi âm</button>
+          <span class="muted" id="rt-rec-status" style="font-size:12px">chưa ghi</span>
+          <label class="link">hoặc chọn file giọng<input type="file" accept="audio/*,video/*" hidden id="rt-voicefile"></label>
+        </div>
+        <audio id="rt-voice-preview" controls style="width:100%;display:none;margin-top:6px"></audio>
+        <input class="pathbox sm wide" id="rt-voice" placeholder="đường dẫn file giọng (tự điền sau khi ghi/chọn)" />
+        <label>Hoặc VĂN BẢN → giọng AI:
+          <textarea class="pathbox" id="rt-tts" rows="3" placeholder="Gõ nội dung cần đọc… (để trống nếu đã có file giọng)"></textarea>
+        </label>
+        <label>Giọng AI:
+          <select id="rt-ttsvoice" class="pathbox sm"></select>
+        </label>
+      </div>
+
+      <!-- ② XỬ LÝ GIỌNG -->
+      <div class="optgroup">
+        <div class="optgroup-h">② 🎚️ Xử lý giọng</div>
+        <label>Lọc ồn:
+          <select id="rt-denoise"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option><option value="studio" selected>Studio (sạch nhất)</option></select>
+        </label>
+        <label><input type="checkbox" id="rt-enhance" checked> ✨ Đánh bóng giọng (rõ chữ)</label>
+        <label><input type="checkbox" id="rt-cutfillers" checked> ✂️ Bỏ "à ừ" + ngắt quãng</label>
+        <label>⏩ Tốc độ giọng:
+          <select id="rt-speed"><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.2">1.2×</option></select>
+        </label>
+        <label>🔊 Tăng âm lượng (dB): <input class="pathbox sm" id="rt-gain" value="0" style="width:70px" /></label>
+      </div>
+
+      <!-- ③ CẢNH -->
+      <div class="optgroup">
+        <div class="optgroup-h">③ 🎬 Thư mục cảnh (trám linh động)</div>
+        <label>Thư mục ảnh/clip cảnh:
+          <input class="pathbox sm wide" id="rt-scenes" placeholder="H:\\...\\thu-muc-canh" />
+        </label>
+        <label>Mỗi cảnh dài (giây): <input class="pathbox sm" id="rt-scenedur" value="3.6" style="width:70px" /></label>
+        <label>Khung hình:
+          <select id="rt-aspect"><option value="916">9:16 (dọc)</option><option value="11">1:1 (vuông)</option><option value="169">16:9 (ngang)</option></select>
+        </label>
+        <label>Màu:
+          <select id="rt-color"><option value="chill" selected>Chill + da cam</option><option value="warm">Da cam đậm</option><option value="soft">Chill nhạt</option><option value="off">Tắt</option></select>
+        </label>
+      </div>
+
+      <!-- ④ NHẠC NỀN -->
+      <div class="optgroup">
+        <div class="optgroup-h">④ 🎵 Nhạc nền (phối nhiều đoạn)</div>
+        <label>Danh sách nhạc — MỖI DÒNG 1 file (nối tiếp + crossfade):
+          <textarea class="pathbox" id="rt-music" rows="3" placeholder="H:\\...\\nhac-1.mp3&#10;H:\\...\\nhac-2.mp3"></textarea>
+        </label>
+        <div class="row"><label class="link">➕ Thêm nhạc từ máy<input type="file" accept="audio/*" hidden multiple id="rt-musicfile"></label></div>
+        <label>🔊 Âm lượng nhạc <b id="rt-mvval">16</b>%<input type="range" id="rt-mv" min="0" max="60" value="16" style="width:100%"></label>
+        <label>Crossfade giữa các đoạn (giây): <input class="pathbox sm" id="rt-crossfade" value="1.5" style="width:70px" /></label>
+      </div>
+
+      <!-- ⑤ CHỮ & LOGO -->
+      <div class="optgroup">
+        <div class="optgroup-h">⑤ ✍️ Chữ &amp; Logo</div>
+        <label><input type="checkbox" id="rt-cap" checked> Phụ đề động (Roboto)</label>
+        <label>Kiểu phụ đề:
+          <select id="rt-capstyle"><option value="karaoke">Karaoke</option><option value="popline">Pop cụm</option></select>
+        </label>
+        <label>🔑 Từ khóa phóng to giữa màn (cách nhau dấu phẩy):
+          <input class="pathbox sm wide" id="rt-keywords" placeholder="VD: bình yên, hạnh phúc" />
+        </label>
+        <label>✍️ Hook chữ to đầu video:
+          <input class="pathbox sm wide" id="rt-hook" placeholder="để trống nếu không dùng" />
+        </label>
+        <label>🏷️ Logo:
+          <label class="link">chọn logo<input type="file" accept="image/*" hidden id="rt-logofile"></label>
+          <input class="pathbox sm wide" id="rt-logo" placeholder="đường dẫn logo .png (nền trong suốt)" />
+        </label>
+        <label>Vị trí logo:
+          <select id="rt-logopos"><option value="br">Dưới phải</option><option value="tr">Trên phải</option><option value="tl">Trên trái</option><option value="bl">Dưới trái</option></select>
+        </label>
+      </div>
+
+      <!-- ⑥ XUẤT BẢN -->
+      <div class="optgroup">
+        <div class="optgroup-h">⑥ 📦 Xuất bản</div>
+        <label><input type="checkbox" id="rt-norm" checked> Chuẩn âm -14 LUFS</label>
+        <label><input type="checkbox" id="rt-mkthumb" checked> 🖼️ Tạo thumbnail</label>
+        <label><input type="checkbox" id="rt-mkcontent" checked> ✍️ Tạo caption (AI)</label>
+        <label><input type="checkbox" id="rt-mklark"> 📤 Đăng Lark sau khi dựng</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="go big" id="btn-rental">🎬 Dựng video Kênh cho thuê →</button>
+    </div>
+    <div id="rental-out"></div>
   </section>
 
   <!-- 🛋️ NỘI THẤT CHO CON -->
@@ -424,7 +537,7 @@
           <select id="int-vspeed"><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.2">1.2×</option></select>
         </label>
         <label>🎙️ Khử tạp âm giọng:
-          <select id="int-voiceclean"><option value="off">Tắt</option><option value="low">Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select>
+          <select id="int-voiceclean"><option value="studio" selected>🎚️ Studio (như thu phòng)</option><option value="high">Mạnh (triệt để)</option><option value="medium">Vừa (khử ồn AI)</option><option value="low">Nhẹ</option><option value="off">Tắt</option></select>
         </label>
       </div>
 
@@ -511,6 +624,68 @@
     <div id="tts-out"></div>
   </section>
 
+  <!-- 🎚️ LÀM SẠCH GIỌNG (audio-only) -->
+  <section id="tab-voiceclean" class="panel">
+    <div class="hero-note">
+      <b>Thả 1 file giọng (hoặc video có tiếng) → nhận lại file giọng sạch.</b>
+      Tự bỏ tiếng đệm <b>à/ừ</b> + khoảng chết, <b>giảm ồn</b>, chỉnh <b>âm lượng</b> và
+      <b>tốc độ</b> (1.1× / 1.2×). Xuất ra file <b>.mp3</b> dùng lại cho mọi tab (dán vào ô giọng).
+    </div>
+    <div class="dropzone" id="dz-voiceclean">
+      <p>Kéo–thả FILE GIỌNG (mp3/wav/m4a) hoặc VIDEO có tiếng</p>
+      <small>hoặc <label class="link">chọn file<input type="file" accept="audio/*,video/*" hidden id="file-voiceclean"></label>, hoặc dán đường dẫn:</small>
+      <input class="pathbox" id="vc-path" placeholder="H:\\...\\giong.mp3" />
+    </div>
+    <div class="opts">
+      <div class="optgroup">
+        <div class="optgroup-h">✂️ Bỏ à/ừ &amp; khoảng chết</div>
+        <label><input type="checkbox" id="vc-fillers" checked> Bỏ tiếng đệm <b>à / ừ / ờ…</b> + khoảng lặng chết</label>
+        <label>Cắt khoảng lặng dài hơn (giây):
+          <select id="vc-silence"><option value="0.5">0.5s (chặt)</option><option value="0.6" selected>0.6s</option><option value="0.8">0.8s</option><option value="1.0">1.0s (thoáng)</option></select>
+        </label>
+        <span class="muted" style="font-size:11px">Cần nhận diện lời (Whisper) — file dài xử lý lâu hơn một chút.</span>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🔇 Giảm ồn &amp; độ rõ</div>
+        <label>Mức giảm ồn:
+          <select id="vc-denoise">
+            <option value="off">Tắt (giữ nguyên)</option>
+            <option value="low">Nhẹ</option>
+            <option value="medium">Vừa</option>
+            <option value="high">Mạnh</option>
+            <option value="studio" selected>🎚️ Studio (như thu phòng)</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="vc-enhance"> ✨ Đánh bóng cho rõ chữ (EQ + nén nhẹ)</label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">🔊 Âm lượng</div>
+        <label><input type="checkbox" id="vc-norm" checked> Chuẩn âm <b>-14 LUFS</b> (đều to/nhỏ)</label>
+        <label>Tăng thêm âm lượng: <b id="vc-gainval">0</b> dB
+          <input type="range" id="vc-gain" min="0" max="12" step="1" value="0" style="width:100%">
+        </label>
+        <span class="muted" style="font-size:11px">0 dB = giữ nguyên. Có chặn vỡ tiếng khi đẩy to.</span>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">⏩ Tốc độ</div>
+        <label>Tăng tốc độ nói:
+          <select id="vc-tempo">
+            <option value="1.0" selected>1.0× (giữ nguyên)</option>
+            <option value="1.1">1.1× (nhanh nhẹ)</option>
+            <option value="1.2">1.2× (nhanh)</option>
+            <option value="1.25">1.25×</option>
+            <option value="1.3">1.3×</option>
+          </select>
+        </label>
+        <span class="muted" style="font-size:11px">Giữ nguyên cao độ giọng (không bị "chuột").</span>
+      </div>
+    </div>
+    <div class="row">
+      <button class="go big" id="btn-voiceclean">🎚️ Xử lý giọng →</button>
+    </div>
+    <div id="voiceclean-out"></div>
+  </section>
+
   <!-- ✍️ SỬA PHỤ ĐỀ (video thành phẩm bất kỳ) -->
   <section id="tab-resub" class="panel">
     <div class="hero-note">
@@ -532,8 +707,8 @@
     <div id="rs-editor" style="display:none">
       <div class="opts">
         <div class="optgroup" style="flex:1 1 100%">
-          <div class="optgroup-h">✍️ Phụ đề (mỗi dòng = 1 câu; sửa chữ sai; để trống dòng = ẩn câu)</div>
-          <textarea class="pathbox" id="rs-sub" rows="8" spellcheck="false"></textarea>
+          <div class="optgroup-h">✍️ Phụ đề — mỗi dòng = 1 câu ngắn · sửa chữ sai · để trống dòng = ẩn câu · đừng thêm/bớt số dòng</div>
+          <textarea class="pathbox" id="rs-sub" rows="12" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5;white-space:pre"></textarea>
         </div>
         <div class="optgroup">
           <div class="optgroup-h">🎨 Phụ đề mới</div>
@@ -618,10 +793,10 @@
         <div class="optgroup-h">🎨 Màu &amp; ánh sáng</div>
         <label>Color grade:
           <select id="e-color">
+            <option value="off" selected>Tắt (giữ màu gốc)</option>
+            <option value="low">Nhẹ</option>
             <option value="medium">Điện ảnh (vừa)</option>
             <option value="high">Đậm (mạnh)</option>
-            <option value="low">Nhẹ</option>
-            <option value="off">Tắt</option>
           </select>
         </label>
         <label>Sáng <b id="e-brival">0</b><input type="range" id="e-bri" min="-100" max="100" value="0"></label>
@@ -634,7 +809,7 @@
         <label><input type="checkbox" id="e-punch" checked> Punch-zoom theo nhịp</label>
         <label><input type="checkbox" id="e-shake" checked> Camera shake</label>
         <label><input type="checkbox" id="e-flash" checked> Flash chuyển cảnh</label>
-        <label><input type="checkbox" id="e-film" checked> Vignette + grain</label>
+        <label><input type="checkbox" id="e-film"> Vignette + grain</label>
         <label><input type="checkbox" id="e-prog" checked> Progress bar</label>
         <label><input type="checkbox" id="e-sfx"> 🔊 Sound effect (whoosh)</label>
         <label>Làm mịn video:
@@ -666,10 +841,11 @@
         </label>
         <label>🎙️ Giữ giọng, khử tạp âm:
           <select id="e-voice">
-            <option value="off">Tắt</option>
+            <option value="studio" selected>🎚️ Studio (như thu phòng)</option>
+            <option value="high">Mạnh (triệt để)</option>
+            <option value="medium">Vừa (khử ồn AI)</option>
             <option value="low">Nhẹ</option>
-            <option value="medium">Vừa</option>
-            <option value="high">Mạnh</option>
+            <option value="off">Tắt</option>
           </select>
         </label>
       </div>
@@ -717,6 +893,62 @@
       <button class="go" id="btn-extract">Bóc ý tưởng →</button>
     </div>
     <div id="extract-out"></div>
+  </section>
+
+  <!-- REMAKE VIDEO -->
+  <section id="tab-remake" class="panel">
+    <div class="rmk-steps" id="rmk-stepbar"></div>
+
+    <!-- Bước 1: nhập + cấu hình -->
+    <div class="optgroup" id="rmk-input">
+      <div class="dropzone tall" id="dz-remake">
+        <p>🔄 Kéo–thả / chọn video cũ, hoặc dán LINK / đường dẫn để dựng lại theo concept mới</p>
+        <input class="pathbox" id="rmk-url" placeholder="https://... (yt-dlp tải về)" />
+        <input class="pathbox" id="rmk-path" placeholder="đường dẫn file trên máy (mp4 / mov / avi / webm)" />
+      </div>
+      <div class="row">
+        <label>Mức độ thay đổi <select id="rmk-mucdo"></select></label>
+        <label>Phong cách mới <select id="rmk-style"></select></label>
+        <label>Giọng đọc mới <select id="rmk-voice"></select></label>
+        <label>Kiểu phụ đề
+          <select id="rmk-capstyle"><option value="karaoke">Karaoke (tô chữ)</option><option value="popline">Popline</option></select>
+        </label>
+        <label class="rmk-chk" title="Dùng lại TIẾNG GỐC của video (không đọc lại bằng giọng AI). Vẫn đổi hook/phụ đề/nhịp/nhạc.">
+          <input type="checkbox" id="rmk-keepaudio"> 🔊 Giữ âm thanh gốc
+        </label>
+        <label class="rmk-chk" title="Bật = in phụ đề động lên video. Tắt = không thêm phụ đề (vẫn có file SRT để tải).">
+          <input type="checkbox" id="rmk-caption" checked> 📝 Thêm phụ đề
+        </label>
+      </div>
+      <details class="rmk-adv">
+        <summary>⚙️ Giữ lại / Thay đổi (nâng cao)</summary>
+        <div class="rmk-cols">
+          <div><b>Giữ lại</b><div id="rmk-keep" class="rmk-flags"></div></div>
+          <div><b>Thay đổi</b><div id="rmk-change" class="rmk-flags"></div></div>
+        </div>
+        <div class="row">
+          <input class="pathbox sm wide" id="rmk-broll" placeholder="🗂️ thư mục b-roll thay thế (tùy chọn)" />
+          <input class="pathbox sm wide" id="rmk-music" placeholder="🎵 đường dẫn nhạc nền (tùy chọn)" />
+        </div>
+        <textarea class="pathbox" id="rmk-custom" rows="2" placeholder="✍️ Yêu cầu tùy chỉnh thêm (không bắt buộc)"></textarea>
+      </details>
+      <div class="row">
+        <button class="go big" id="rmk-btn-analyze">🔎 Phân tích video →</button>
+        <button class="dl" id="rmk-btn-cancel" hidden>✖ Hủy</button>
+        <span class="muted" id="rmk-status" style="font-size:12px"></span>
+      </div>
+    </div>
+
+    <!-- Bước 2–5: render bởi remake.js -->
+    <div id="rmk-analysis"></div>
+    <div id="rmk-concepts"></div>
+    <div id="rmk-script"></div>
+    <div id="rmk-result"></div>
+
+    <details id="rmk-history-box" style="margin-top:14px">
+      <summary>🕘 Lịch sử dự án remake</summary>
+      <div id="rmk-history"></div>
+    </details>
   </section>
 
   <!-- HÀNG LOẠT -->
@@ -835,5 +1067,6 @@
 </main>
 
 <script src="/app.js"></script>
+<script src="/remake.js"></script>
 </body>
 </html>

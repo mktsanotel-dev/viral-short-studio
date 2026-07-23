@@ -18,11 +18,19 @@ import { longEdit } from "./lib/longedit.mjs";
 import { voiceShort } from "./lib/voiceshort.mjs";
 import { interiorEdit } from "./lib/interior.mjs";
 import { detectSubs, resubVideo } from "./lib/resub.mjs";
+import { rentalVideo } from "./lib/rental.mjs";
+import { cleanVoice } from "./lib/voiceclean.mjs";
 import { textToSpeech, TTS_VOICES } from "./lib/tts.mjs";
 import { runStandard } from "./lib/standard.mjs";
-import { BRAND, DEFAULTS, PRESETS, applyBrandSettings } from "./lib/presets.mjs";
+import { BRAND, DEFAULTS, PRESETS, REMAKE, applyBrandSettings } from "./lib/presets.mjs";
 import { publishOutputs } from "./lib/publish.mjs";
 import { loadSettings, saveSettings } from "./lib/settings.mjs";
+// 🔄 Remake video (module riêng)
+import { createProject, load as rmkLoad, update as rmkUpdate, list as rmkList, appendLog as rmkLog, requestCancel as rmkCancel, throwIfCancelled as rmkCheck } from "./lib/remake/project.mjs";
+import { analyzeSource } from "./lib/remake/analyze.mjs";
+import { generateConcepts } from "./lib/remake/concepts.mjs";
+import { generateScript } from "./lib/remake/script.mjs";
+import { renderRemake } from "./lib/remake/render.mjs";
 
 // Đọc bộ tuỳ chọn XUẤT BẢN dùng chung (Thumbnail + Content AI + đăng Lark) từ body.
 // Áp GIỐNG NHAU cho mọi tính năng làm video → hành vi đồng nhất.
@@ -32,6 +40,7 @@ function publishOpts(body, loai) {
     makeContent: body.makeContent != null ? body.makeContent : DEFAULTS.makeContent,
     postLark: body.postLark != null ? body.postLark : DEFAULTS.autoPostLark,
     thumbPhotoDir: body.thumbPhotoDir || BRAND.thumbPhotoDir,
+    thumbPhoto: body.thumbPhoto || null,
     thumbName: body.thumbName || BRAND.name,
     loai: loai || "Video",
   };
@@ -102,7 +111,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && (p === "/" || p === "/index.html")) {
       return send(res, 200, fs.readFileSync(path.join(PUBLIC, "index.html")), MIME[".html"]);
     }
-    if (req.method === "GET" && (p === "/app.js" || p === "/style.css")) {
+    if (req.method === "GET" && (p === "/app.js" || p === "/style.css" || p === "/remake.js")) {
       const f = path.join(PUBLIC, p.slice(1));
       return send(res, 200, fs.readFileSync(f), MIME[path.extname(f)]);
     }
@@ -129,7 +138,7 @@ const server = http.createServer(async (req, res) => {
     // đúng MỘT chỗ, không hardcode value trong index.html nữa.
     if (p === "/api/config") {
       const presetList = Object.entries(PRESETS).map(([key, v]) => ({ key, label: v.label, hint: v.hint }));
-      return send(res, 200, { brand: BRAND, defaults: DEFAULTS, presets: presetList, lark: larkStatus() });
+      return send(res, 200, { brand: BRAND, defaults: DEFAULTS, presets: presetList, remake: REMAKE, lark: larkStatus() });
     }
 
     // ---- ⚙️ CẤU HÌNH HỌC VIÊN: đọc cấu hình đã lưu để điền vào tab Cấu hình ----
@@ -303,12 +312,12 @@ const server = http.createServer(async (req, res) => {
           doCaptions: body.doCaptions !== false,
           captionStyle: body.captionStyle || "karaoke",
           editedSegments: body.editedSegments || null,
-          colorLevel: body.colorLevel || "medium",
+          colorLevel: body.colorLevel || DEFAULTS.colorLevel,
           manual: body.manual || null,
-          smooth: body.smooth || "off",
+          smooth: body.smooth || DEFAULTS.smooth,
           punch: body.punch !== false,
           shake: body.shake !== false,
-          film: body.film !== false,
+          film: body.film != null ? body.film : DEFAULTS.film,
           progress: body.progress !== false,
           flash: body.flash !== false,
           brollTransition: body.brollTransition || "fade",
@@ -324,7 +333,7 @@ const server = http.createServer(async (req, res) => {
           logoY: body.logoY ?? null,
           sfx: !!body.sfx,
           sfxVol: body.sfxVol ?? 0.6,
-          voiceClean: body.voiceClean || "off",
+          voiceClean: body.voiceClean || DEFAULTS.voiceClean,
           musicPath: body.musicPath || null,
           musicVol: body.musicVol ?? 0.18,
           normalize: body.normalize !== false,
@@ -335,6 +344,31 @@ const server = http.createServer(async (req, res) => {
         const title = slug(path.basename(file).replace(/\.[^.]+$/, "")).replace(/-/g, " ");
         const pub = await publishOutputs([{ outPath: r.outPath, title, transcriptText: r.transcriptText }], { ...publishOpts(body, "Video"), onLog });
         return { ...r, ...pub[0], clips: pub };
+      });
+      return send(res, 200, { jobId: job.id });
+    }
+
+    // ---- 🎚️ LÀM SẠCH GIỌNG (audio-only): bỏ à/ừ, giảm ồn, âm lượng, tốc độ ----
+    if (req.method === "POST" && p === "/api/voiceclean") {
+      const body = await readJSONBody(req);
+      const file = body.path;
+      if (!file || !fs.existsSync(file)) return send(res, 400, { error: "thiếu/không thấy file giọng" });
+      const job = newJob("voiceclean");
+      const base = slug(path.basename(file).replace(/\.[^.]+$/, "")) || "giong";
+      const outPath = path.join(OUT, `${base}-sach-${Date.now()}.mp3`);
+      runJob(job, async (onLog) => {
+        return await cleanVoice(file, {
+          onLog, id: job.id, outPath,
+          cutFillers: body.cutFillers !== false,
+          silenceMax: body.silenceMax ?? 0.6,
+          denoise: body.denoise || "studio",
+          enhance: !!body.enhance,
+          normalize: body.normalize !== false,
+          volumeGain: body.volumeGain ?? 0,
+          tempo: body.tempo ?? 1.0,
+          model: body.model || DEFAULTS.model,
+          lang: body.lang || DEFAULTS.lang,
+        });
       });
       return send(res, 200, { jobId: job.id });
     }
@@ -355,6 +389,7 @@ const server = http.createServer(async (req, res) => {
           voiceVol: body.voiceVol ?? 1.0,
           musicPath: body.musicPath || null, musicVol: body.musicVol ?? DEFAULTS.musicVolVoice,
           normalize: body.normalize !== false,
+          voiceClean: body.voiceClean || DEFAULTS.voiceClean,
           colorLevel: body.colorLevel || DEFAULTS.colorLevel,
           smooth: body.smooth || DEFAULTS.smooth, film: body.film != null ? body.film : DEFAULTS.film,
           doCaptions: body.doCaptions !== false, captionStyle: body.captionStyle || DEFAULTS.captionStyle,
@@ -407,6 +442,50 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { jobId: job.id });
     }
 
+    // ---- 🎬 KÊNH CHO THUÊ (chỉ voice + cảnh: montage linh động · lọc giọng · nhạc phối nhiều đoạn) ----
+    if (req.method === "POST" && p === "/api/rental") {
+      const body = await readJSONBody(req);
+      if (body.voicePath && !fs.existsSync(body.voicePath)) return send(res, 400, { error: "không thấy file giọng" });
+      if (!body.voicePath && !String(body.ttsText || "").trim()) return send(res, 400, { error: "chưa có giọng (chọn file / ghi âm / nhập văn bản tạo giọng AI)" });
+      if (!body.scenesFolder || !fs.existsSync(body.scenesFolder)) return send(res, 400, { error: "chưa chọn thư mục cảnh (b-roll)" });
+      const job = newJob("rental");
+      const outPath = path.join(OUT, `kenh-cho-thue-${Date.now()}.mp4`);
+      const music = Array.isArray(body.musicPaths) ? body.musicPaths.filter(Boolean) : [];
+      runJob(job, async (onLog) => {
+        const r = await rentalVideo({
+          onLog, id: job.id, outPath,
+          voicePath: body.voicePath || null,
+          ttsText: body.ttsText || null, ttsVoice: body.ttsVoice || "hoaimy",
+          voiceClean: body.voiceClean || "studio",
+          enhance: body.enhance !== false,
+          cutFillers: body.cutFillers !== false,
+          voiceSpeed: Number(body.voiceSpeed) || 1,
+          voiceGain: Number(body.voiceGain) || 0,
+          scenesFolder: body.scenesFolder,
+          sceneDur: Number(body.sceneDur) || 3.6,
+          aspect: body.aspect || "916",
+          colorPreset: body.colorPreset || "chill",
+          musicPaths: music,
+          musicVol: body.musicVol ?? 0.16,
+          crossfade: Number(body.crossfade) || 1.5,
+          doCaptions: body.doCaptions !== false,
+          captionStyle: body.captionStyle || "karaoke",
+          keywords: body.keywords || "",
+          hookText: body.hookText || null,
+          editedSegments: body.editedSegments || null,
+          logoPath: body.logoPath || null,
+          logoPos: body.logoPos || "br",
+          logoScale: body.logoScale ?? 0.16,
+          normalize: body.normalize !== false,
+          model: body.model || DEFAULTS.model,
+          lang: body.lang || DEFAULTS.lang,
+        });
+        const pub = await publishOutputs([{ outPath: r.outPath, title: body.hookText || "Kênh cho thuê", transcriptText: r.transcriptText }], { ...publishOpts(body, "Video"), onLog });
+        return { ...r, ...pub[0] };
+      });
+      return send(res, 200, { jobId: job.id });
+    }
+
     // ---- 🛋️ NỘI THẤT CHO CON (lật · voice · tăng tốc · cắt à ừ · logo · từ khóa · chỉnh giọng) ----
     if (req.method === "POST" && p === "/api/interior") {
       const body = await readJSONBody(req);
@@ -436,7 +515,7 @@ const server = http.createServer(async (req, res) => {
           voicePitch: Number(body.voicePitch) || 0,
           voiceTone: body.voiceTone || "normal",
           voiceVol: body.voiceVol ?? 1.0,
-          voiceClean: body.voiceClean || "off",
+          voiceClean: body.voiceClean || DEFAULTS.voiceClean,
           cutFillers: body.cutFillers !== false,
           doCaptions: body.doCaptions !== false,
           captionStyle: body.captionStyle || "karaoke",
@@ -543,6 +622,104 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
       return send(res, 200, { jobId: job.id });
     }
 
+    // ==== 🔄 REMAKE VIDEO (module lib/remake) ====
+    // Bước 1: phân tích video gốc → tạo dự án (lưu ra đĩa).
+    if (req.method === "POST" && p === "/api/remake/analyze") {
+      const body = await readJSONBody(req);
+      const job = newJob("remake-analyze");
+      runJob(job, async (onLog) => {
+        let file = body.path;
+        if (body.url) { onLog("→ Tải video từ link..."); file = await download(body.url, { onLog, id: job.id }); }
+        if (!file || !fs.existsSync(file)) throw new Error("Chưa có file/URL video hợp lệ.");
+        const config = {
+          mucDo: body.mucDo || REMAKE.defaultMucDo,
+          phongCach: body.phongCach || "goc",
+          keep: body.keep || REMAKE.keepDefault,
+          change: body.change || REMAKE.changeDefault,
+          voice: body.voice || REMAKE.defaultVoice,
+          captionStyle: body.captionStyle || DEFAULTS.captionStyle,
+          musicPath: body.musicPath || null,
+          brollFolder: body.brollFolder || null,
+          customRequest: body.customRequest || "",
+        };
+        const proj = createProject({ name: body.name || path.basename(file), sourceVideo: file, config });
+        rmkLog(proj.id, "analyze: " + file);
+        const analysis = await analyzeSource(file, { onLog, id: proj.id, model: body.model || DEFAULTS.model, lang: body.lang || DEFAULTS.lang, customRequest: config.customRequest });
+        rmkUpdate(proj.id, { sourceSdr: analysis.sourceSdr, transcript: analysis.transcript, transcriptText: analysis.transcriptText, analysis, status: "analyzed" });
+        return { projectId: proj.id, analysis };
+      });
+      return send(res, 200, { jobId: job.id });
+    }
+    // Bước 2: sinh 2–3 concept.
+    if (req.method === "POST" && p === "/api/remake/concepts") {
+      const body = await readJSONBody(req);
+      const proj = rmkLoad(body.projectId);
+      if (!proj) return send(res, 404, { error: "Không tìm thấy dự án." });
+      const job = newJob("remake-concepts");
+      runJob(job, async (onLog) => {
+        rmkCheck(proj.id);
+        const config = { ...(proj.config || {}), ...(body.config || {}) };
+        const concepts = await generateConcepts(proj.analysis, config, { onLog });
+        rmkUpdate(proj.id, { concepts, config, status: "concepts" });
+        return { concepts };
+      });
+      return send(res, 200, { jobId: job.id });
+    }
+    // Bước 3: sinh kịch bản + storyboard cho concept đã chọn.
+    if (req.method === "POST" && p === "/api/remake/script") {
+      const body = await readJSONBody(req);
+      const proj = rmkLoad(body.projectId);
+      if (!proj) return send(res, 404, { error: "Không tìm thấy dự án." });
+      const idx = body.conceptIndex ?? 0;
+      const concept = (proj.concepts || [])[idx];
+      if (!concept) return send(res, 400, { error: "Concept không hợp lệ." });
+      const job = newJob("remake-script");
+      runJob(job, async (onLog) => {
+        rmkCheck(proj.id);
+        const script = await generateScript(proj.analysis, concept, proj.config || {}, { onLog });
+        rmkUpdate(proj.id, { chosenConcept: idx, script, storyboard: script.scenes, status: "script" });
+        return { script };
+      });
+      return send(res, 200, { jobId: job.id });
+    }
+    // Bước 4: dựng video remake (kịch bản có thể đã sửa) + xuất bản.
+    if (req.method === "POST" && p === "/api/remake/build") {
+      const body = await readJSONBody(req);
+      const proj = rmkLoad(body.projectId);
+      if (!proj) return send(res, 404, { error: "Không tìm thấy dự án." });
+      const job = newJob("remake-build");
+      runJob(job, async (onLog) => {
+        rmkCheck(proj.id);
+        const config = { ...(proj.config || {}), ...(body.options || {}) };
+        // Hộp "Giữ âm thanh gốc" (có thể bật ở bước dựng) → ép giữ tiếng gốc, KHÔNG ghi đè cờ keep khác.
+        if (body.options && typeof body.options.keepGiongGoc === "boolean") {
+          config.keep = { ...(config.keep || {}), giongGoc: body.options.keepGiongGoc };
+        }
+        const script = body.script || proj.script;
+        if (!script) throw new Error("Chưa có kịch bản để dựng.");
+        const p2 = rmkUpdate(proj.id, { script, storyboard: script.scenes, config, status: "building" });
+        const r = await renderRemake(p2, { onLog });
+        const pub = await publishOutputs([{ outPath: r.outPath, title: script.tieuDe || "Remake", transcriptText: r.transcriptText }], { ...publishOpts(body, "Remake"), onLog });
+        rmkUpdate(proj.id, { outPath: r.outPath, diff: r.diff, exports: r.exports, audioFiles: r.audioFiles, subtitleFile: r.subtitleFile, status: "built" });
+        return { outPath: r.outPath, meta: r.meta, engine: r.engine, diff: r.diff, exports: r.exports, sourceVideo: proj.sourceVideo, sourceSdr: proj.sourceSdr, ...(pub[0] || {}) };
+      });
+      return send(res, 200, { jobId: job.id });
+    }
+    // Lịch sử + khôi phục dự án.
+    if (req.method === "GET" && p === "/api/remake/projects") {
+      return send(res, 200, { projects: rmkList() });
+    }
+    if (req.method === "GET" && p.startsWith("/api/remake/project/")) {
+      const proj = rmkLoad(decodeURIComponent(p.split("/").pop()));
+      if (!proj) return send(res, 404, { error: "Không tìm thấy dự án." });
+      return send(res, 200, { project: proj });
+    }
+    // Hủy hợp tác một dự án đang xử lý.
+    if (req.method === "POST" && p.startsWith("/api/remake/cancel/")) {
+      rmkCancel(decodeURIComponent(p.split("/").pop()));
+      return send(res, 200, { ok: true });
+    }
+
     // ---- 🧠 CẮT TỰ ĐỘNG (video dài → nhiều short) ----
     if (req.method === "POST" && p === "/api/autoclip") {
       const body = await readJSONBody(req);
@@ -573,7 +750,7 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
           brollFill: body.brollFill || "match",
           manual: body.manual || null,
           smooth: body.smooth || "off",
-          voiceClean: body.voiceClean || "off",
+          voiceClean: body.voiceClean || DEFAULTS.voiceClean,
           brollTransition: body.brollTransition || "fade",
           aiBroll: !!body.aiBroll,
           aiBrollCount: body.aiBrollCount ?? 6,
@@ -629,10 +806,10 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
         segments: body.segments || null,
         reframe: body.reframe || "blur",
         captionStyle: body.captionStyle || "karaoke",
-        colorLevel: body.colorLevel || "off",
-        punch: !!body.punch, film: body.film !== false, progress: body.progress !== false,
+        colorLevel: body.colorLevel || DEFAULTS.colorLevel,
+        punch: !!body.punch, film: body.film != null ? body.film : DEFAULTS.film, progress: body.progress !== false,
         doCaptions: body.doCaptions !== false,
-        voiceClean: body.voiceClean || "off", smooth: body.smooth || "off",
+        voiceClean: body.voiceClean || DEFAULTS.voiceClean, smooth: body.smooth || DEFAULTS.smooth,
         hookText: body.hookText || null,
         speed: body.speed ?? 1,
         overlayText: body.overlayText || null, overlayPos: body.overlayPos || "bottom",
@@ -702,9 +879,9 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
                 reframe: body.reframe || "blur",
                 doCaptions: body.doCaptions !== false,
                 captionStyle: body.captionStyle || "karaoke",
-                colorLevel: body.colorLevel || "medium",
+                colorLevel: body.colorLevel || DEFAULTS.colorLevel,
                 punch: body.punch !== false, shake: body.shake !== false,
-                film: body.film !== false, progress: body.progress !== false,
+                film: body.film != null ? body.film : DEFAULTS.film, progress: body.progress !== false,
                 flash: body.flash !== false,
                 brollFolder: body.brollFolder || null, brollFill: body.brollFill || "match",
                 normalize: body.normalize !== false,

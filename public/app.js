@@ -352,8 +352,9 @@ function subEditorBlock(segments) {
   const subText = segments.map((s) => s.text).join("\n");
   return `
     <div class="optgroup subedit-box" style="margin-top:12px;flex:1 1 100%">
-      <div class="optgroup-h">✍️ Sửa phụ đề rồi dựng lại (mỗi dòng = 1 câu; để trống dòng = ẩn câu đó)</div>
-      <textarea class="pathbox subedit-ta" rows="6" spellcheck="false">${esc(subText)}</textarea>
+      <div class="optgroup-h">✍️ Sửa phụ đề rồi dựng lại</div>
+      <div class="muted" style="font-size:12px;margin:2px 0 6px">Mỗi dòng = 1 câu ngắn · sửa chữ Whisper nghe sai rồi bấm Dựng lại · để trống 1 dòng = ẩn câu đó · <b>đừng thêm/bớt số dòng</b>.</div>
+      <textarea class="pathbox subedit-ta" rows="12" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5;white-space:pre">${esc(subText)}</textarea>
       <button class="dl subedit-btn">🔁 Dựng lại (áp phụ đề đã sửa)</button>
       <span class="muted subedit-status" style="font-size:12px;margin-left:8px"></span>
     </div>`;
@@ -452,8 +453,8 @@ function tinhChinhHtml(c, i, ed) {
             <span class="muted tc-durlab">· ${Math.round(c.duration || 0)}s</span>
           </div>
         </div>
-        <label class="tc-sublabel">📝 Phụ đề (mỗi dòng = 1 câu; sửa chữ sai, để trống dòng để ẩn câu đó):</label>
-        <textarea class="tc-sub" data-idx="${i}" rows="4" spellcheck="false">${esc(subText)}</textarea>
+        <label class="tc-sublabel">📝 Phụ đề — mỗi dòng = 1 câu ngắn · sửa chữ sai · để trống dòng = ẩn câu · đừng thêm/bớt số dòng:</label>
+        <textarea class="tc-sub" data-idx="${i}" rows="10" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5;white-space:pre">${esc(subText)}</textarea>
         <label><input type="checkbox" class="tc-subon" data-idx="${i}"> Áp phụ đề đã sửa (nếu không tick: giữ lời gốc)</label>
         <div class="tc-fx">
           <label>Khung: ${sel("reframe", [["blur", "9:16 nền mờ"], ["fill", "9:16 cắt đầy"]], ed.reframe || "blur")}</label>
@@ -1153,6 +1154,51 @@ function renderEditResult(result) {
   attachSubEditor($("#edit-out"), { endpoint: "/api/edit", body: editLastBody, rerender: renderEditResult });
 }
 
+// ================= 🎚️ LÀM SẠCH GIỌNG (audio-only) =================
+let vcPath = null;
+wireDrop("dz-voiceclean", "file-voiceclean", "vc-path", async (f) => {
+  showLog("Tải lên…");
+  try { vcPath = await uploadFile(f); $("#vc-path").value = vcPath; setLog(["✔ Đã tải: " + f.name]); }
+  catch (e) { alert(e.message); }
+});
+$("#vc-gain").addEventListener("input", (e) => { $("#vc-gainval").textContent = e.target.value; });
+$("#btn-voiceclean").addEventListener("click", async () => {
+  const file = $("#vc-path").value.trim() || vcPath;
+  if (!file) return alert("Chọn/kéo-thả file giọng hoặc dán đường dẫn.");
+  $("#btn-voiceclean").disabled = true; $("#voiceclean-out").innerHTML = "";
+  const body = {
+    path: file,
+    cutFillers: $("#vc-fillers").checked,
+    silenceMax: parseFloat($("#vc-silence").value) || 0.6,
+    denoise: $("#vc-denoise").value,
+    enhance: $("#vc-enhance").checked,
+    normalize: $("#vc-norm").checked,
+    volumeGain: parseInt($("#vc-gain").value, 10) || 0,
+    tempo: parseFloat($("#vc-tempo").value) || 1.0,
+  };
+  const r = await fetch("/api/voiceclean", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  }).then((r) => r.json());
+  if (r.error) { $("#btn-voiceclean").disabled = false; return alert(r.error); }
+  pollJob(r.jobId, (j) => {
+    $("#btn-voiceclean").disabled = false;
+    if (j.status === "error") return alert(j.error);
+    renderVoiceCleanResult(j.result);
+  });
+});
+function renderVoiceCleanResult(result) {
+  const out = result.outPath;
+  const url = "/api/file?path=" + encodeURIComponent(out) + "&t=" + Date.now();
+  const dur = result.meta && result.meta.duration != null ? result.meta.duration.toFixed(1) : "?";
+  $("#voiceclean-out").innerHTML = `
+    <div class="result-video">
+      <h3>✅ Giọng đã làm sạch (${dur}s)</h3>
+      <audio src="${url}" controls style="width:100%;max-width:520px"></audio><br>
+      <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải file giọng (.mp3)</a>
+      <div class="muted" style="font-size:12px;margin-top:8px">${out}</div>
+    </div>`;
+}
+
 // ================= BÓC Ý TƯỞNG =================
 $("#btn-extract").addEventListener("click", async () => {
   const url = $("#ex-url").value.trim();
@@ -1258,6 +1304,7 @@ async function runLong() {
     brollFill: $("#l-brollfill").value,
     makeThumb: $("#l-thumb").checked,
     thumbPhotoDir: $("#l-thumbdir").value.trim() || (VSS_CFG.brand && VSS_CFG.brand.thumbPhotoDir) || null,
+    thumbPhoto: $("#l-thumbimg") ? ($("#l-thumbimg").value.trim() || null) : null,
     thumbTitle: $("#l-thumbtitle").value.trim(),
     thumbName: $("#l-thumbname").value.trim() || (VSS_CFG.brand && VSS_CFG.brand.name) || "",
     makeContent: $("#l-mkcontent") ? $("#l-mkcontent").checked : true,
@@ -1298,6 +1345,7 @@ function renderLongResult(result) {
 wireUpload("file-lmusic", "l-music");
 wireUpload("file-lintro", "l-intro");
 wireUpload("file-loutro", "l-outro");
+wireUpload("file-lthumbimg", "l-thumbimg");
 
 // ================= 🎙️ SHORT LỒNG VOICE =================
 async function voiceAddClips(files) {
@@ -1385,7 +1433,7 @@ function renderVoiceResult(result) {
 // Nhớ thiết lập + đường dẫn input để chỉnh lại KHÔNG phải nhập lại; kèm nút "Dựng lại (giữ phân tích)".
 // Nhờ cache Whisper + Claude, chạy lại cùng nguồn = bỏ qua gõ chữ + 0 token, chỉ render lại.
 const LONG_FIELDS = ["long-paths", "l-aspect", "l-reframe", "l-smart", "l-fillers", "l-cut", "l-cap", "l-capstyle",
-  "l-model", "l-maxmin", "l-ttop", "l-tbot", "l-broll", "l-brollfill", "l-thumb", "l-thumbdir", "l-thumbtitle",
+  "l-model", "l-maxmin", "l-ttop", "l-tbot", "l-broll", "l-brollfill", "l-thumb", "l-thumbdir", "l-thumbimg", "l-thumbtitle",
   "l-thumbname", "l-color", "l-smooth", "l-voice", "l-film", "l-norm", "l-music", "l-mv", "l-trans", "l-intro", "l-outro",
   "l-mkcontent", "l-mklark"];
 const VOICE_FIELDS = ["voice-clips", "voice-preset", "voice-audio", "voice-vv", "voice-broll", "voice-brollfill",
@@ -1801,8 +1849,9 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
           <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(res.outPath)}" download>⬇ Tải video</a>
         </div>
         <div class="optgroup" style="margin-top:12px;flex:1 1 100%">
-          <div class="optgroup-h">✍️ Sửa phụ đề rồi dựng lại (mỗi dòng = 1 câu; để trống dòng = ẩn câu đó)</div>
-          <textarea class="pathbox" id="int-subedit" rows="5" spellcheck="false">${esc(subText)}</textarea>
+          <div class="optgroup-h">✍️ Sửa phụ đề rồi dựng lại</div>
+          <div class="muted" style="font-size:12px;margin:2px 0 6px">Mỗi dòng = 1 câu ngắn · sửa chữ nghe sai rồi bấm Dựng lại · để trống 1 dòng = ẩn câu đó · <b>đừng thêm/bớt số dòng</b>.</div>
+          <textarea class="pathbox" id="int-subedit" rows="12" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5;white-space:pre">${esc(subText)}</textarea>
           <button class="dl" id="int-resub">🔁 Dựng lại (áp phụ đề đã sửa)</button>
           <span class="muted" id="int-resub-status" style="font-size:12px;margin-left:8px"></span>
         </div>
@@ -1852,6 +1901,138 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
       );
     });
   }, { placeholder: "Gõ/dán văn bản bất kỳ → AI đọc thành file giọng dùng cho mọi tab…" });
+})();
+
+// ================= 🎬 KÊNH CHO THUÊ =================
+let rentalVoicePath = null, rentalLastBody = null;
+(function wireRental() {
+  if (!$("#btn-rental")) return;
+
+  // Dropdown giọng AI (chia nhóm, dùng chung danh sách TTS)
+  const vsel = $("#rt-ttsvoice");
+  const fillVoices = () => {
+    try {
+      if (!vsel || !TTS_VOICE_LIST || !TTS_VOICE_LIST.length) return;
+      const groups = [];
+      for (const v of TTS_VOICE_LIST) {
+        const g = v.group || "Giọng đọc";
+        let grp = groups.find((x) => x.name === g);
+        if (!grp) { grp = { name: g, items: [] }; groups.push(grp); }
+        grp.items.push(v);
+      }
+      vsel.innerHTML = groups.map((g) => `<optgroup label="${g.name}">` + g.items.map((v) => `<option value="${v.id}">${v.label}</option>`).join("") + `</optgroup>`).join("");
+    } catch (e) { /* danh sách giọng chưa nạp — thử lại sau */ }
+  };
+  setTimeout(fillVoices, 300); setTimeout(fillVoices, 1500);
+
+  $("#rt-mv").addEventListener("input", (e) => { $("#rt-mvval").textContent = e.target.value; });
+
+  // Chọn file giọng
+  $("#rt-voicefile").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    showLog("Tải giọng…");
+    try {
+      rentalVoicePath = await uploadFile(f); $("#rt-voice").value = rentalVoicePath;
+      const a = $("#rt-voice-preview"); a.src = URL.createObjectURL(f); a.style.display = "block";
+      $("#rt-rec-status").textContent = "đã chọn: " + f.name;
+    } catch (err) { alert(err.message); }
+  });
+  // Thêm nhạc từ máy → nối vào danh sách
+  $("#rt-musicfile").addEventListener("change", async (e) => {
+    const files = [...e.target.files]; if (!files.length) return;
+    const ta = $("#rt-music");
+    for (const f of files) { try { showLog("Tải nhạc: " + f.name); const p = await uploadFile(f); ta.value += (ta.value.trim() ? "\n" : "") + p; } catch (err) { alert(err.message); } }
+  });
+  // Logo
+  $("#rt-logofile").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { $("#rt-logo").value = await uploadFile(f); setLog(["✔ Logo: " + f.name]); } catch (err) { alert(err.message); }
+  });
+
+  // 🔴 Ghi âm
+  let rec = null, chunks = [];
+  $("#rt-rec").addEventListener("click", async () => {
+    const btn = $("#rt-rec"), st = $("#rt-rec-status");
+    if (rec && rec.state === "recording") { rec.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunks = []; rec = new MediaRecorder(stream);
+      rec.ondataavailable = (ev) => { if (ev.data.size) chunks.push(ev.data); };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const type = (chunks[0] && chunks[0].type) || "audio/webm";
+        const ext = type.includes("ogg") ? "ogg" : type.includes("mp4") ? "m4a" : "webm";
+        const file = new File([new Blob(chunks, { type })], "ghi-am-" + Date.now() + "." + ext, { type });
+        const a = $("#rt-voice-preview"); a.src = URL.createObjectURL(file); a.style.display = "block";
+        st.textContent = "⏳ đang tải bản ghi…";
+        try { rentalVoicePath = await uploadFile(file); $("#rt-voice").value = rentalVoicePath; st.textContent = "✔ đã ghi & tải giọng"; }
+        catch (err) { st.textContent = "❌ " + err.message; }
+        btn.textContent = "🔴 Ghi âm"; btn.classList.remove("recording");
+      };
+      rec.start(); btn.textContent = "⏹ Dừng ghi"; btn.classList.add("recording");
+      st.textContent = "🔴 đang ghi… bấm Dừng để xong";
+    } catch (err) { alert("Không truy cập được micro: " + err.message); }
+  });
+
+  function buildBody() {
+    return {
+      voicePath: $("#rt-voice").value.trim() || rentalVoicePath || null,
+      ttsText: $("#rt-tts").value.trim() || null,
+      ttsVoice: $("#rt-ttsvoice").value || "hoaimy",
+      voiceClean: $("#rt-denoise").value,
+      enhance: $("#rt-enhance").checked,
+      cutFillers: $("#rt-cutfillers").checked,
+      voiceSpeed: +$("#rt-speed").value,
+      voiceGain: parseFloat($("#rt-gain").value) || 0,
+      scenesFolder: $("#rt-scenes").value.trim(),
+      sceneDur: parseFloat($("#rt-scenedur").value) || 3.6,
+      aspect: $("#rt-aspect").value,
+      colorPreset: $("#rt-color").value,
+      musicPaths: $("#rt-music").value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
+      musicVol: (+$("#rt-mv").value) / 100,
+      crossfade: parseFloat($("#rt-crossfade").value) || 1.5,
+      doCaptions: $("#rt-cap").checked,
+      captionStyle: $("#rt-capstyle").value,
+      keywords: $("#rt-keywords").value.trim(),
+      hookText: $("#rt-hook").value.trim() || null,
+      logoPath: $("#rt-logo").value.trim() || null,
+      logoPos: $("#rt-logopos").value,
+      normalize: $("#rt-norm").checked,
+      makeThumb: $("#rt-mkthumb").checked,
+      makeContent: $("#rt-mkcontent").checked,
+      postLark: $("#rt-mklark").checked,
+    };
+  }
+
+  async function run(extra) {
+    const body = Object.assign(buildBody(), extra || {});
+    if (!body.voicePath && !body.ttsText) return alert("Chưa có giọng: ghi âm, chọn file, hoặc nhập văn bản để tạo giọng AI.");
+    if (!body.scenesFolder) return alert("Chưa chọn thư mục cảnh (mục ③).");
+    if (body.postLark && !extra && !confirm("Sau khi dựng xong, tự đăng lên Lark Base?")) { $("#rt-mklark").checked = false; body.postLark = false; }
+    $("#btn-rental").disabled = true; if (!extra) $("#rental-out").innerHTML = "";
+    rentalLastBody = body;
+    try {
+      const r = await fetch("/api/rental", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      await new Promise((res, rej) => pollJob(r.jobId, (j) => {
+        if (j.status === "error") return rej(new Error(j.error));
+        renderResult(j.result); res();
+      }));
+    } catch (e) { alert(e.message); }
+    finally { $("#btn-rental").disabled = false; }
+  }
+  $("#btn-rental").addEventListener("click", () => run());
+
+  function renderResult(result) {
+    const out = result.outPath, url = "/api/file?path=" + encodeURIComponent(out) + "&t=" + Date.now();
+    $("#rental-out").innerHTML = `<div class="result-video">
+      <h3>✅ Kênh cho thuê đã xong (${result.meta.width}x${result.meta.height}, ${Math.round(result.meta.duration)}s · ${result.scenes || "?"} cảnh)</h3>
+      <video src="${url}" controls style="max-width:340px;width:100%"></video><br>
+      <a class="dl" href="/api/file?dl=1&path=${encodeURIComponent(out)}" download>⬇ Tải video</a>
+      ${subEditorBlock(result.segments)}
+      ${publishHtml(result)}</div>`;
+    attachSubEditor($("#rental-out"), { endpoint: "/api/rental", body: rentalLastBody, rerender: renderResult });
+  }
 })();
 
 // ================= ✍️ SỬA PHỤ ĐỀ (video thành phẩm bất kỳ) =================
@@ -1976,7 +2157,7 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
 
   // 🗂️ Nút "Chọn thư mục" cho MỌI ô nhập đường dẫn THƯ MỤC (b-roll, ảnh chân dung).
   [
-    "ac-broll", "l-broll", "voice-broll", "e-broll",           // thư mục b-roll (trám cảnh)
+    "ac-broll", "l-broll", "voice-broll", "e-broll", "rt-scenes", // thư mục b-roll / cảnh
     "ac-thumbdir", "l-thumbdir", "cfg-brand-thumbdir",          // thư mục ảnh chân dung (thumbnail)
   ].forEach((id) => attachFolderPicker(id));
 })();
