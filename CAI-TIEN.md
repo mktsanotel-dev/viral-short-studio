@@ -87,5 +87,13 @@ Dành cho kênh chỉ ghép giọng đọc + cảnh (không có mặt người n
 - Danh mục dùng chung `CAPTION_STYLES`; giao diện tự điền vào mọi ô "Kiểu phụ đề".
 - Đã test: 10/10 kiểu render qua libass không lỗi.
 
+## 10. Remake: tự nhận diện tiêu đề đầu video (mới)
+File mới `lib/remake/detect-title.mjs`; sửa `lib/remake/render.mjs`.
+- Trước khi thêm tiêu đề (hook) cho bản remake, **AI nhìn khung hình đầu** video gốc:
+  nếu gốc ĐÃ có sẵn dòng chữ tiêu đề to → **KHÔNG thêm tiêu đề remake** (tránh chồng 2 lớp chữ).
+- Dùng AI-vision qua `claude -p` với ảnh khung hình (@mention), kết quả được cache theo video.
+- `config.hookMode`: "auto" (mặc định) | "always" | "never".
+- Đã test: video có tiêu đề → true (bỏ hook), video không có → false (giữ hook).
+
 ## Bảo mật
 - `.env`, `settings.local.json`, thư mục `work/`, và media trong `Tài nguyên/` KHÔNG được đưa lên (theo `.gitignore`).

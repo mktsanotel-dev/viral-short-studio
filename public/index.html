@@ -164,6 +164,9 @@
           </select>
         </label>
         <label><input type="checkbox" id="ac-hook"> Đắp chữ tiêu đề đầu video (tuỳ chọn)</label>
+        <label>⏩ Tốc độ video:
+          <select id="ac-speed"><option value="1" selected>1.0× (giữ nguyên)</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2.0×</option></select>
+        </label>
         <label><input type="checkbox" id="ac-film"> Vignette nhẹ</label>
         <label><input type="checkbox" id="ac-prog" checked> Thanh tiến trình</label>
       </div>
@@ -214,6 +217,9 @@
         <label>⏱️ Giới hạn phút/phần (dài hơn tự tách):
           <input class="pathbox sm" id="l-maxmin" value="10" style="width:70px" />
         </label>
+        <label>⏩ Tốc độ video:
+          <select id="l-speed"><option value="1" selected>1.0× (giữ nguyên)</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2.0×</option></select>
+        </label>
       </div>
       <div class="optgroup">
         <div class="optgroup-h">🔤 Tiêu đề (chỉ khung 1:1)</div>
@@ -222,8 +228,10 @@
       </div>
       <div class="optgroup">
         <div class="optgroup-h">🎬 Trám cảnh (b-roll)</div>
-        <label>Thư mục ảnh/clip trám (đặt tên theo từ khóa):
-          <input class="pathbox sm wide" id="l-broll" placeholder="H:\\...\\thu-muc-broll (để trống nếu không dùng)" />
+        <label><input type="checkbox" id="l-aibroll"> 🤖 B-roll AI tự tạo <span class="muted" style="font-size:11px">(phân tích từ khóa → sinh cảnh, không cần thư mục)</span></label>
+        <label>Số cảnh AI: <input class="pathbox sm" id="l-aicount" value="6" style="width:70px" /></label>
+        <label>hoặc Thư mục ảnh/clip trám (đặt tên theo từ khóa):
+          <input class="pathbox sm wide" id="l-broll" placeholder="H:\\...\\thu-muc-broll (để trống nếu dùng b-roll AI)" />
         </label>
         <label>Cách trám:
           <select id="l-brollfill"><option value="match">Chỉ cảnh khớp từ khóa</option><option value="all">Trám dày</option></select>
@@ -350,6 +358,9 @@
         <label><input type="checkbox" id="voice-cap" checked> Phụ đề động (theo voice)</label>
         <label>Kiểu phụ đề:
           <select id="voice-capstyle"><option value="karaoke">Karaoke</option><option value="popline">Pop cụm</option></select>
+        </label>
+        <label>⏩ Tốc độ video:
+          <select id="voice-speed"><option value="1" selected>1.0× (giữ nguyên)</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2.0×</option></select>
         </label>
         <label><input type="checkbox" id="voice-film"> Vignette + grain</label>
         <label><input type="checkbox" id="voice-prog"> Thanh tiến trình</label>
@@ -548,6 +559,7 @@
         <label>⏩ Tốc độ video:
           <select id="int-speed"><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.2">1.2×</option></select>
         </label>
+        <label><input type="checkbox" id="int-mute"> 🔇 Tắt âm thanh gốc của video <span class="muted" style="font-size:11px">(giọng đọc riêng — nếu có — vẫn giữ)</span></label>
         <label>Khung hình:
           <select id="int-aspect">
             <option value="keep">Giữ khung gốc</option>
@@ -594,6 +606,14 @@
           </select>
         </label>
         <label>Cỡ logo <b id="int-logosizeval">16</b>%<input type="range" id="int-logosize" min="6" max="40" value="16" style="width:100%"></label>
+      </div>
+      <div class="optgroup">
+        <div class="optgroup-h">⑥ 🎵 Nhạc nền</div>
+        <label><label class="link">chọn nhạc<input type="file" accept="audio/*" hidden id="int-musicfile"></label>
+          <input class="pathbox sm wide" id="int-music" placeholder="H:\\...\\nhac.mp3 (ngắn hơn video sẽ tự lặp; để trống = không nhạc)" />
+        </label>
+        <label>🔊 Âm lượng nhạc <b id="int-mvval">14</b>%<input type="range" id="int-mv" min="0" max="100" value="14"></label>
+        <span class="muted" style="font-size:11px">Nhạc tự trộn dưới giọng đọc. Nếu bật "🔇 Tắt âm thanh gốc" mà có nhạc → chỉ còn nhạc nền.</span>
       </div>
 
       <!-- ⑥ XUẤT BẢN -->
@@ -653,10 +673,12 @@
             <option value="low">Nhẹ</option>
             <option value="medium">Vừa</option>
             <option value="high">Mạnh</option>
-            <option value="studio" selected>🎚️ Studio (như thu phòng)</option>
+            <option value="studio">🎚️ Studio (như thu phòng)</option>
+            <option value="max" selected>🔇 Cách ly giọng (triệt tiêu môi trường)</option>
           </select>
         </label>
         <label><input type="checkbox" id="vc-enhance"> ✨ Đánh bóng cho rõ chữ (EQ + nén nhẹ)</label>
+        <span class="muted" style="font-size:11px">"Cách ly giọng" = mạnh nhất, xoá gần hết tiếng nền/môi trường. Nếu thấy giọng hơi "khô/máy" thì hạ về Studio.</span>
       </div>
       <div class="optgroup">
         <div class="optgroup-h">🔊 Âm lượng</div>
@@ -714,6 +736,9 @@
           <div class="optgroup-h">🎨 Phụ đề mới</div>
           <label>Kiểu phụ đề:
             <select id="rs-capstyle"><option value="karaoke">Karaoke (nổi từng từ)</option><option value="popline">Pop từng cụm</option></select>
+          </label>
+          <label>⏩ Tốc độ video:
+            <select id="rs-speed"><option value="1" selected>1.0× (giữ nguyên)</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2.0×</option></select>
           </label>
           <label>Vị trí phụ đề:
             <select id="rs-cappos"><option value="bottom">Dưới</option><option value="middle">Giữa</option><option value="top">Trên</option></select>
@@ -868,6 +893,9 @@
             <option value="popline">Pop từng cụm</option>
           </select>
         </label>
+        <label>⏩ Tốc độ video:
+          <select id="e-speed"><option value="1" selected>1.0× (giữ nguyên)</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2.0×</option></select>
+        </label>
       </div>
       <div class="optgroup">
         <div class="optgroup-h">📦 Xuất bản (thumbnail · caption · Lark)</div>
@@ -967,6 +995,9 @@
       <label><input type="checkbox" id="b-cut" checked> Cắt khoảng lặng</label>
       <label><input type="checkbox" id="b-cap" checked> Phụ đề động</label>
       <label><input type="checkbox" id="b-norm" checked> Chuẩn âm</label>
+      <label>⏩ Tốc độ video (chế độ Biên tập):
+        <select id="b-speed"><option value="1" selected>1.0× (giữ nguyên)</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2.0×</option></select>
+      </label>
     </div>
     <div class="row"><button class="go" id="btn-batch">Chạy hàng loạt →</button></div>
     <div id="batch-out"></div>

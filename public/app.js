@@ -283,6 +283,7 @@ $("#btn-ac").addEventListener("click", async () => {
     maxClips: parseInt($("#ac-max").value, 10) || 30,
     burnHook: $("#ac-hook").checked,
     reframe: $("#ac-reframe").value,
+    speed: parseFloat($("#ac-speed").value) || 1,
     colorLevel: "off",           // màu chỉnh TRỰC TIẾP ở phần kết quả (không nướng cứng khi render)
     punch: false, shake: false, flash: false, sfx: false, aiBroll: false,
     film: $("#ac-film").checked,
@@ -1129,6 +1130,7 @@ $("#btn-edit").addEventListener("click", async () => {
     normalize: $("#e-norm").checked,
     reframe: $("#e-reframe").value,
     captionStyle: $("#e-capstyle").value,
+    speed: parseFloat($("#e-speed").value) || 1,
     colorLevel: $("#e-color").value,
     manual: {
       brightness: +$("#e-bri").value, contrast: +$("#e-con").value,
@@ -1261,6 +1263,7 @@ $("#btn-batch").addEventListener("click", async () => {
   const body = {
     folder, mode: $("#b-mode").value,
     doCutSilence: $("#b-cut").checked, doCaptions: $("#b-cap").checked, normalize: $("#b-norm").checked,
+    speed: parseFloat($("#b-speed").value) || 1,
   };
   const r = await fetch("/api/batch", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
@@ -1311,6 +1314,7 @@ async function runLong() {
     doCutSilence: $("#l-cut").checked,
     doCaptions: $("#l-cap").checked,
     captionStyle: $("#l-capstyle").value,
+    speed: parseFloat($("#l-speed").value) || 1,
     reframe: $("#l-reframe").value,
     model: $("#l-model").value,
     colorLevel: $("#l-color").value,
@@ -1329,6 +1333,8 @@ async function runLong() {
     smartPrune: $("#l-smart").checked,
     brollFolder: $("#l-broll").value.trim() || null,
     brollFill: $("#l-brollfill").value,
+    aiBroll: $("#l-aibroll").checked,
+    aiBrollCount: parseInt($("#l-aicount").value, 10) || 6,
     makeThumb: $("#l-thumb").checked,
     thumbPhotoDir: $("#l-thumbdir").value.trim() || (VSS_CFG.brand && VSS_CFG.brand.thumbPhotoDir) || null,
     thumbPhoto: $("#l-thumbimg") ? ($("#l-thumbimg").value.trim() || null) : null,
@@ -1426,6 +1432,7 @@ async function runVoice() {
     film: $("#voice-film").checked,
     doCaptions: $("#voice-cap").checked,
     captionStyle: $("#voice-capstyle").value,
+    speed: parseFloat($("#voice-speed").value) || 1,
     progress: $("#voice-prog").checked,
     hookText: $("#voice-hook").value.trim() || null,
     brollFolder: $("#voice-broll").value.trim() || null,
@@ -1460,11 +1467,11 @@ function renderVoiceResult(result) {
 // Nhớ thiết lập + đường dẫn input để chỉnh lại KHÔNG phải nhập lại; kèm nút "Dựng lại (giữ phân tích)".
 // Nhờ cache Whisper + Claude, chạy lại cùng nguồn = bỏ qua gõ chữ + 0 token, chỉ render lại.
 const LONG_FIELDS = ["long-paths", "l-aspect", "l-reframe", "l-smart", "l-fillers", "l-cut", "l-cap", "l-capstyle",
-  "l-model", "l-maxmin", "l-ttop", "l-tbot", "l-broll", "l-brollfill", "l-thumb", "l-thumbdir", "l-thumbimg", "l-thumbtitle",
+  "l-model", "l-maxmin", "l-speed", "l-ttop", "l-tbot", "l-broll", "l-brollfill", "l-aibroll", "l-aicount", "l-thumb", "l-thumbdir", "l-thumbimg", "l-thumbtitle",
   "l-thumbname", "l-color", "l-smooth", "l-voice", "l-film", "l-norm", "l-music", "l-mv", "l-trans", "l-intro", "l-outro",
   "l-mkcontent", "l-mklark"];
 const VOICE_FIELDS = ["voice-clips", "voice-preset", "voice-audio", "voice-vv", "voice-broll", "voice-brollfill",
-  "voice-trans", "voice-color", "voice-smooth", "voice-cap", "voice-capstyle", "voice-film", "voice-prog",
+  "voice-trans", "voice-color", "voice-smooth", "voice-cap", "voice-capstyle", "voice-speed", "voice-film", "voice-prog",
   "voice-hook", "voice-music", "voice-mv", "voice-mkthumb", "voice-mkcontent", "voice-mklark"];
 const AC_FIELDS = ["path-ac", "url-ac", "ac-broll", "ac-brollfill", "ac-cta", "ac-logo", "ac-music", "ac-mv",
   "ac-thumbbrand", "ac-thumbdir", "ac-thumbname", "ac-model", "ac-score", "ac-max", "ac-trans", "ac-reframe",
@@ -1785,6 +1792,12 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
     const f = e.target.files[0]; if (!f) return;
     try { $("#int-logo").value = await uploadFile(f); setLog(["✔ Logo: " + f.name]); } catch (err) { alert(err.message); }
   });
+  // Chọn nhạc nền + nhãn âm lượng
+  $("#int-musicfile").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { $("#int-music").value = await uploadFile(f); setLog(["✔ Nhạc nền: " + f.name]); } catch (err) { alert(err.message); }
+  });
+  $("#int-mv").addEventListener("input", (e) => { $("#int-mvval").textContent = e.target.value; });
 
   // 🔴 Ghi âm trực tiếp bằng micro (MediaRecorder)
   let rec = null, chunks = [];
@@ -1826,6 +1839,9 @@ let intVideoPath = null, intVoicePath = null, intLastResult = null;
       voiceClean: $("#int-voiceclean").value,
       flip: $("#int-flip").checked,
       videoSpeed: +$("#int-speed").value,
+      muteVideo: $("#int-mute").checked,
+      musicPath: $("#int-music").value.trim() || null,
+      musicVol: (parseInt($("#int-mv").value, 10) || 14) / 100,
       aspect: $("#int-aspect").value,
       colorLevel: $("#int-color").value,
       smooth: $("#int-smooth").value,
@@ -2099,6 +2115,7 @@ let rentalVoicePath = null, rentalLastBody = null;
       path: file,
       editedSegments: $("#rs-sub").value.split("\n").map((s) => s.trim()),
       captionStyle: $("#rs-capstyle").value,
+      speed: parseFloat($("#rs-speed").value) || 1,
       captionPos: $("#rs-cappos").value,
       coverOld: $("#rs-cover").checked,
       coverPos: $("#rs-coverpos").value,

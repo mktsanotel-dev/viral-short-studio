@@ -20,6 +20,7 @@ import { interiorEdit } from "./lib/interior.mjs";
 import { detectSubs, resubVideo } from "./lib/resub.mjs";
 import { rentalVideo } from "./lib/rental.mjs";
 import { cleanVoice } from "./lib/voiceclean.mjs";
+import { speedUpResult, speedUpVideo } from "./lib/speedup.mjs";
 import { textToSpeech, TTS_VOICES } from "./lib/tts.mjs";
 import { runStandard } from "./lib/standard.mjs";
 import { BRAND, DEFAULTS, PRESETS, REMAKE, applyBrandSettings } from "./lib/presets.mjs";
@@ -51,6 +52,28 @@ const PUBLIC = path.join(__root, "public");
 const OUT = path.join(WORK, "out");
 const UP = path.join(WORK, "uploads");
 for (const d of [OUT, UP]) fs.mkdirSync(d, { recursive: true });
+
+// 📁 Ngăn theo TÁC VỤ trong out/ — TẠO SẴN HẾT khi khởi động cho dễ nhìn, dễ tìm.
+const TASK_DIRS = [
+  "cat-tu-dong",        // 🧠 Cắt tự động
+  "video-dai",          // 🎬 Video dài YouTube
+  "short-long-voice",   // 🎙️ Short lồng voice
+  "kenh-cho-thue",      // 🎬 Kênh cho thuê
+  "noi-that",           // 🛋️ Nội thất cho con
+  "lam-sach-giong",     // 🎚️ Làm sạch giọng
+  "sua-phu-de",         // ✍️ Sửa phụ đề
+  "tu-bien-tap",        // ✂️ Tự biên tập
+  "hang-loat",          // 📦 Hàng loạt
+  "remake",             // 🔄 Remake video
+];
+for (const d of TASK_DIRS) fs.mkdirSync(path.join(OUT, d), { recursive: true });
+
+// Trả đường dẫn ngăn của 1 tác vụ (tạo nếu chưa có).
+function outDir(sub) {
+  const d = path.join(OUT, sub);
+  fs.mkdirSync(d, { recursive: true });
+  return d;
+}
 
 // ---- Kho job trong bộ nhớ ----
 const jobs = new Map();
@@ -183,7 +206,6 @@ const server = http.createServer(async (req, res) => {
     // → dùng cho "tải cả thư mục" (tab Hàng loạt cần 1 đường dẫn thư mục thật).
     if (req.method === "POST" && p === "/api/upload") {
       const name = decodeURIComponent(req.headers["x-filename"] || "video.mp4");
-      const buf = await readBody(req);
       let baseDir = UP;
       const sub = decodeURIComponent(req.headers["x-subdir"] || "").trim();
       let dest;
@@ -205,7 +227,19 @@ const server = http.createServer(async (req, res) => {
         const safe = `${Date.now()}-${slug(name.replace(/\.[^.]+$/, ""))}${path.extname(name) || ".mp4"}`;
         dest = path.join(UP, safe);
       }
-      fs.writeFileSync(dest, buf);
+      // ⬇️ GHI THẲNG THEO LUỒNG ra ổ đĩa — KHÔNG gom cả file vào RAM → nhận video LỚN (>2GB) không vỡ.
+      try {
+        await new Promise((resolve, reject) => {
+          const ws = fs.createWriteStream(dest);
+          req.on("error", reject);
+          ws.on("error", reject);
+          ws.on("finish", resolve);
+          req.pipe(ws);
+        });
+      } catch (e) {
+        try { fs.unlinkSync(dest); } catch { /* dọn file dở */ }
+        return send(res, 500, { error: "tải lên lỗi: " + (e.message || String(e)) });
+      }
       return send(res, 200, { ok: true, path: dest, name, dir: baseDir });
     }
 
@@ -302,7 +336,7 @@ const server = http.createServer(async (req, res) => {
       if (!file || !fs.existsSync(file)) return send(res, 400, { error: "thiếu/không thấy file" });
       const job = newJob("edit");
       const base = slug(path.basename(file).replace(/\.[^.]+$/, ""));
-      const outPath = path.join(OUT, `${base}-viral-${Date.now()}.mp4`);
+      const outPath = path.join(outDir("tu-bien-tap"), `${base}-viral-${Date.now()}.mp4`);
       runJob(job, async (onLog) => {
         const r = await autoEdit(file, {
           onLog, id: job.id, outPath,
@@ -342,6 +376,7 @@ const server = http.createServer(async (req, res) => {
         });
         // 🖼️✍️📤 Thumbnail + Content AI + (tuỳ chọn) đăng Lark — ĐỒNG NHẤT mọi tính năng làm video.
         const title = slug(path.basename(file).replace(/\.[^.]+$/, "")).replace(/-/g, " ");
+        await speedUpResult(r, body.speed, onLog);   // ⏩ tăng tốc (nếu chọn) trước khi làm thumbnail/đăng
         const pub = await publishOutputs([{ outPath: r.outPath, title, transcriptText: r.transcriptText }], { ...publishOpts(body, "Video"), onLog });
         return { ...r, ...pub[0], clips: pub };
       });
@@ -355,7 +390,7 @@ const server = http.createServer(async (req, res) => {
       if (!file || !fs.existsSync(file)) return send(res, 400, { error: "thiếu/không thấy file giọng" });
       const job = newJob("voiceclean");
       const base = slug(path.basename(file).replace(/\.[^.]+$/, "")) || "giong";
-      const outPath = path.join(OUT, `${base}-sach-${Date.now()}.mp3`);
+      const outPath = path.join(outDir("lam-sach-giong"), `${base}-sach-${Date.now()}.mp3`);
       runJob(job, async (onLog) => {
         return await cleanVoice(file, {
           onLog, id: job.id, outPath,
@@ -382,7 +417,7 @@ const server = http.createServer(async (req, res) => {
       for (const f of clips) if (!fs.existsSync(f)) return send(res, 400, { error: "không thấy file: " + f });
       const job = newJob("voiceshort");
       const b0 = slug(path.basename(clips[0]).replace(/\.[^.]+$/, "")) || "voice-short";
-      const outPath = path.join(OUT, `voice-${b0}-${Date.now()}.mp4`);
+      const outPath = path.join(outDir("short-long-voice"), `voice-${b0}-${Date.now()}.mp4`);
       runJob(job, async (onLog) => {
         const r = await voiceShort(clips, body.voicePath, {
           onLog, id: job.id, outPath,
@@ -401,6 +436,7 @@ const server = http.createServer(async (req, res) => {
           model: body.model || DEFAULTS.model, lang: body.lang || DEFAULTS.lang,
         });
         // 🖼️✍️📤 Thumbnail + Content AI + (tuỳ chọn) đăng Lark — đồng nhất.
+        await speedUpResult(r, body.speed, onLog);   // ⏩ tăng tốc (nếu chọn)
         const pub = await publishOutputs([{ outPath: r.outPath, title: body.hookText || "", transcriptText: r.transcriptText }], { ...publishOpts(body, "Video"), onLog });
         return { ...r, ...pub[0], clips: pub };
       });
@@ -426,19 +462,23 @@ const server = http.createServer(async (req, res) => {
       if (!file || !fs.existsSync(file)) return send(res, 400, { error: "thiếu/không thấy video" });
       const job = newJob("resub");
       const base = slug(path.basename(file).replace(/\.[^.]+$/, "")) || "video";
-      const outPath = path.join(OUT, `subfix-${base}-${Date.now()}.mp4`);
-      runJob(job, async (onLog) => resubVideo(file, {
-        onLog, id: job.id, outPath,
-        editedSegments: body.editedSegments || null,
-        captionStyle: body.captionStyle || "karaoke",
-        captionPos: body.captionPos || "bottom",
-        coverOld: !!body.coverOld,
-        coverPos: body.coverPos || "bottom",
-        coverFrac: body.coverFrac ?? 0.16,
-        coverMode: body.coverMode || "blur",
-        model: body.model || DEFAULTS.model,
-        lang: body.lang || DEFAULTS.lang,
-      }));
+      const outPath = path.join(outDir("sua-phu-de"), `subfix-${base}-${Date.now()}.mp4`);
+      runJob(job, async (onLog) => {
+        const r = await resubVideo(file, {
+          onLog, id: job.id, outPath,
+          editedSegments: body.editedSegments || null,
+          captionStyle: body.captionStyle || "karaoke",
+          captionPos: body.captionPos || "bottom",
+          coverOld: !!body.coverOld,
+          coverPos: body.coverPos || "bottom",
+          coverFrac: body.coverFrac ?? 0.16,
+          coverMode: body.coverMode || "blur",
+          model: body.model || DEFAULTS.model,
+          lang: body.lang || DEFAULTS.lang,
+        });
+        await speedUpResult(r, body.speed, onLog);   // ⏩ tăng tốc (nếu chọn)
+        return r;
+      });
       return send(res, 200, { jobId: job.id });
     }
 
@@ -449,7 +489,7 @@ const server = http.createServer(async (req, res) => {
       if (!body.voicePath && !String(body.ttsText || "").trim()) return send(res, 400, { error: "chưa có giọng (chọn file / ghi âm / nhập văn bản tạo giọng AI)" });
       if (!body.scenesFolder || !fs.existsSync(body.scenesFolder)) return send(res, 400, { error: "chưa chọn thư mục cảnh (b-roll)" });
       const job = newJob("rental");
-      const outPath = path.join(OUT, `kenh-cho-thue-${Date.now()}.mp4`);
+      const outPath = path.join(outDir("kenh-cho-thue"), `kenh-cho-thue-${Date.now()}.mp4`);
       const music = Array.isArray(body.musicPaths) ? body.musicPaths.filter(Boolean) : [];
       runJob(job, async (onLog) => {
         const r = await rentalVideo({
@@ -480,6 +520,7 @@ const server = http.createServer(async (req, res) => {
           model: body.model || DEFAULTS.model,
           lang: body.lang || DEFAULTS.lang,
         });
+        await speedUpResult(r, body.speed, onLog);   // ⏩ tăng tốc (nếu chọn)
         const pub = await publishOutputs([{ outPath: r.outPath, title: body.hookText || "Kênh cho thuê", transcriptText: r.transcriptText }], { ...publishOpts(body, "Video"), onLog });
         return { ...r, ...pub[0] };
       });
@@ -494,7 +535,7 @@ const server = http.createServer(async (req, res) => {
       if (body.voicePath && !fs.existsSync(body.voicePath)) return send(res, 400, { error: "không thấy file giọng đọc (voice)" });
       const job = newJob("interior");
       const base = slug(path.basename(file).replace(/\.[^.]+$/, "")) || "noi-that";
-      const outPath = path.join(OUT, `noithat-${base}-${Date.now()}.mp4`);
+      const outPath = path.join(outDir("noi-that"), `noithat-${base}-${Date.now()}.mp4`);
       // Logo mặc định: Tài nguyên/logo-noi-that-cho-con.png (nếu học viên đã thả vào).
       let logoPath = body.logoPath || null;
       if (!logoPath) {
@@ -511,6 +552,9 @@ const server = http.createServer(async (req, res) => {
           videoSpeed: Number(body.videoSpeed) || 1,
           voicePath: body.voicePath || null,
           voiceMode: body.voiceMode || "replace",
+          muteVideo: !!body.muteVideo,
+          musicPath: body.musicPath || null,
+          musicVol: body.musicVol ?? 0.14,
           voiceSpeed: Number(body.voiceSpeed) || 1,
           voicePitch: Number(body.voicePitch) || 0,
           voiceTone: body.voiceTone || "normal",
@@ -550,7 +594,7 @@ const server = http.createServer(async (req, res) => {
       for (const f of paths) if (!fs.existsSync(f)) return send(res, 400, { error: "không thấy file: " + f });
       const job = newJob("longedit");
       const base = slug(path.basename(paths[0]).replace(/\.[^.]+$/, "")) || "video-dai";
-      const outPath = path.join(OUT, `long-${base}-${Date.now()}.mp4`);
+      const outPath = path.join(outDir("video-dai"), `long-${base}-${Date.now()}.mp4`);
       runJob(job, async (onLog) => {
         const r = await longEdit(paths, {
           onLog, id: job.id, outPath,
@@ -580,9 +624,12 @@ const server = http.createServer(async (req, res) => {
           smartPrune: !!body.smartPrune,
           brollFolder: body.brollFolder || null,
           brollFill: body.brollFill || DEFAULTS.brollFill,
+          aiBroll: !!body.aiBroll,
+          aiBrollCount: body.aiBrollCount ?? 6,
           makeThumb: false, // thumbnail do publish.mjs lo (một đường thống nhất mọi tính năng)
           maxMinutes: body.maxMinutes ?? 10,
         });
+        await speedUpResult(r, body.speed, onLog);   // ⏩ tăng tốc TỪNG phần (nếu chọn) trước khi làm thumbnail/đăng
         // 🖼️✍️📤 Thumbnail + Content AI + (tuỳ chọn) đăng Lark cho TỪNG phần — đồng nhất.
         const multi = (r.parts || []).length > 1;
         const items = (r.parts || []).map((pt, i) => ({
@@ -699,9 +746,17 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
         if (!script) throw new Error("Chưa có kịch bản để dựng.");
         const p2 = rmkUpdate(proj.id, { script, storyboard: script.scenes, config, status: "building" });
         const r = await renderRemake(p2, { onLog });
-        const pub = await publishOutputs([{ outPath: r.outPath, title: script.tieuDe || "Remake", transcriptText: r.transcriptText }], { ...publishOpts(body, "Remake"), onLog });
+        // 📁 Copy bản remake cuối vào out/remake/ cho đồng bộ với các tác vụ khác (dễ tìm).
+        let finalOut = r.outPath;
+        try {
+          const base = slug(script.tieuDe || "remake") || "remake";
+          finalOut = path.join(outDir("remake"), `${base}-${Date.now()}.mp4`);
+          fs.copyFileSync(r.outPath, finalOut);
+          onLog("  📁 đã lưu bản remake vào out/remake/");
+        } catch (e) { onLog("  ⚠ copy ra out/remake lỗi: " + e.message); finalOut = r.outPath; }
+        const pub = await publishOutputs([{ outPath: finalOut, title: script.tieuDe || "Remake", transcriptText: r.transcriptText }], { ...publishOpts(body, "Remake"), onLog });
         rmkUpdate(proj.id, { outPath: r.outPath, diff: r.diff, exports: r.exports, audioFiles: r.audioFiles, subtitleFile: r.subtitleFile, status: "built" });
-        return { outPath: r.outPath, meta: r.meta, engine: r.engine, diff: r.diff, exports: r.exports, sourceVideo: proj.sourceVideo, sourceSdr: proj.sourceSdr, ...(pub[0] || {}) };
+        return { outPath: finalOut, meta: r.meta, engine: r.engine, diff: r.diff, exports: r.exports, sourceVideo: proj.sourceVideo, sourceSdr: proj.sourceSdr, ...(pub[0] || {}) };
       });
       return send(res, 200, { jobId: job.id });
     }
@@ -769,6 +824,8 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
           musicVol: body.musicVol ?? DEFAULTS.musicVolShort,
           ctaPath: body.ctaPath || null,
         });
+
+        await speedUpResult(result, body.speed, onLog);   // ⏩ tăng tốc MỌI short (nếu chọn) trước khi đăng Lark
 
         // 📤 ĐĂNG LARK sau khi cắt: MẶC ĐỊNH TẮT (xuất bản phải chủ động).
         // Chỉ chạy khi người dùng bật rõ ràng autoPostLark=true trên giao diện.
@@ -872,7 +929,7 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
           try {
             if (mode === "edit") {
               const base = slug(path.basename(f).replace(/\.[^.]+$/, ""));
-              const outPath = path.join(OUT, `${base}-viral-${Date.now()}.mp4`);
+              const outPath = path.join(outDir("hang-loat"), `${base}-viral-${Date.now()}.mp4`);
               const r = await autoEdit(f, {
                 onLog, id: `${job.id}-${i}`, outPath,
                 doCutSilence: body.doCutSilence !== false,
@@ -887,6 +944,7 @@ Hãy trả lời tiếng Việt, gọn: (1) công thức hook, (2) cấu trúc k
                 normalize: body.normalize !== false,
                 model: body.model || DEFAULTS.model, lang: body.lang || DEFAULTS.lang,
               });
+              await speedUpVideo(r.outPath, body.speed, { onLog });   // ⏩ tăng tốc (nếu chọn)
               results.push({ file: f, outPath: r.outPath });
             } else {
               const ev = await evaluate(f, { onLog, model: body.model || DEFAULTS.model, lang: body.lang || DEFAULTS.lang });
